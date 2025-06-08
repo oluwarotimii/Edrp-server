@@ -43,7 +43,7 @@ setup_exception_handlers(app)
 
 # Include routers
 app.include_router(schools.router, prefix="/api", tags=["schools"])
-app.include_router(users.router, prefix="/api", tags=["users"])
+app.include_router(users.router, prefix="/api/auth", tags=["authentication"])
 app.include_router(users.role_router, prefix="/api", tags=["roles"])
 app.include_router(users.permission_router, prefix="/api", tags=["permissions"])
 app.include_router(students.router, prefix="/api", tags=["students"])
