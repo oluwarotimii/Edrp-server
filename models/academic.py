@@ -13,7 +13,8 @@ class Department(TenantBaseModel):
     
     # Relationships
     school = relationship("School", back_populates="departments")
-    teachers = relationship("Teacher", back_populates="department")
+    head_teacher = relationship("Teacher", foreign_keys=[head_teacher_id], post_update=True)
+    teachers = relationship("Teacher", foreign_keys="Teacher.department_id", back_populates="department")
     subjects = relationship("Subject", back_populates="department")
 
 class Class(TenantBaseModel):
@@ -29,6 +30,7 @@ class Class(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
+    class_teacher = relationship("Teacher", foreign_keys=[class_teacher_id], post_update=True)
     students = relationship("Student", back_populates="class_assigned")
     subjects = relationship("Subject", secondary="class_subjects", back_populates="classes")
     timetable_entries = relationship("TimetableEntry", back_populates="class_assigned")

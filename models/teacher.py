@@ -25,7 +25,7 @@ class Teacher(TenantBaseModel):
     # Relationships
     school = relationship("School", back_populates="teachers")
     user = relationship("User")
-    department = relationship("Department", back_populates="teachers")
+    department = relationship("Department", foreign_keys=[department_id], back_populates="teachers")
     assignments = relationship("TeacherAssignment", back_populates="teacher")
     attendance_records = relationship("TeacherAttendance", back_populates="teacher")
     timetable_entries = relationship("TimetableEntry", back_populates="teacher")
