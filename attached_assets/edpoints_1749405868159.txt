@@ -1,0 +1,421 @@
+School & Core User Management
+Endpoint	HTTP Method	Description
+/api/schools	POST	Register School
+/api/schools	GET	Get Schools
+/api/schools/{school_id}	GET	Get School
+/api/schools/{school_id}	PUT	Update School
+/api/join-school	POST	Join School
+/api/schools/{school_id}/regenerate-code	POST	Regenerate Join Code
+/api/users/pending	GET	Get Pending Users
+/api/users/{user_id}/approve	PUT	Approve Or Reject User
+/api/users	GET	Get Users
+/api/users/{user_id}	GET	Get User
+/api/users/{user_id}	PUT	Update User
+/api/users/{user_id}	DELETE	Delete User
+
+
+ Admissions Management Module
+Endpoint	HTTP Method	Description
+/api/admissions/applications	POST	Submit a new student application.
+/api/admissions/applications	GET	Get all applications (with filtering by status, program, etc.).
+/api/admissions/applications/{application_id}	GET	Get details of a specific application.
+/api/admissions/applications/{application_id}/status	PUT	Update application status (e.g., received, under review, accepted).
+/api/admissions/applications/{application_id}/documents	POST	Upload required documents (birth certificate, transcripts).
+/api/admissions/applications/{application_id}/approve	POST	Approve an application and create a student record from it.
+
+Export to Sheets
+
+/api/departments	POST	Create Department
+/api/departments	GET	Get Departments
+/api/departments/{department_id}	GET	Get Department
+/api/departments/{department_id}	PUT	Update Department
+/api/classes	POST	Create Class
+/api/classes	GET	Get Classes
+/api/classes/{class_id}	GET	Get Class
+/api/classes/{class_id}	PUT	Update Class
+/api/subjects	POST	Create Subject
+/api/subjects	GET	Get Subjects
+/api/subjects/{subject_id}	GET	Get Subject
+/api/subjects/{subject_id}	PUT	Update Subject
+/api/academic-sessions	POST	Create Academic Session
+/api/academic-sessions	GET	Get Academic Sessions
+/api/academic-sessions/{session_id}	GET	Get Academic Session
+/api/academic-sessions/{session_id}	PUT	Update Academic Session
+/api/terms	POST	Create Term
+/api/terms	GET	Get Terms
+/api/terms/{term_id}	GET	Get Term
+/api/terms/{term_id}	PUT	Update Term
+
+
+
+Endpoint	HTTP Method	Description
+/api/roles	GET	Get Roles
+/api/roles	POST	Create Role
+/api/roles/{role_id}	GET	Get Role
+/api/roles/{role_id}	PUT	Update Role
+/api/permissions	GET	Get Permissions
+/api/permissions	POST	Create Permission
+/api/roles/{role_id}/permissions/{permission_id}	POST	Assign Permission To Role
+/api/roles/{role_id}/permissions/{permission_id}	DELETE	Remove Permission From Role
+
+
+
+Endpoint	HTTP Method	Description
+/api/students	POST	Create Student
+/api/students	GET	Get Students
+/api/students/{student_id}	GET	Get Student
+/api/students/{student_id}	PUT	Update Student
+/api/students/{student_id}/parents/{parent_user_id}	POST	Link Parent To Student
+/api/students/{student_id}/parents/{parent_user_id}	DELETE	Unlink Parent From Student
+/api/students/{student_id}/parents	GET	Get Student Parents
+/api/parents/{parent_id}/children	GET	Get Parent Children
+/api/parents/{parent_id}/summary	GET	Get Parent Children Summary
+/api/students/{student_id}/custom-fields	POST	Create Student Custom Field
+/api/students/{student_id}/custom-fields	GET	Get Student Custom Fields
+/api/students/{student_id}/custom-fields/{field_id}	PUT	Update Student Custom Field
+
+Export to Sheets
+
+
+Teacher Management
+Endpoint	HTTP Method	Description
+/api/teachers	POST	Create Teacher
+/api/teachers	GET	Get Teachers
+/api/teachers/{teacher_id}	GET	Get Teacher
+/api/teachers/assign	POST	Assign Teacher To Subject Class
+/api/teachers/assignments/{teacher_id}/{subject_id}/{class_id}	DELETE	Remove Teacher Assignment
+/api/teachers/{teacher_id}/assignments	GET	Get Teacher Assignments
+
+Export to Sheets
+
+
+
+Endpoint	HTTP Method	Description
+/api/users/{user_id}/demote	POST	Demote a User’s Role (e.g., Teacher to Student)
+/api/students/{student_id}/demote	POST	Demote Student to Lower Class
+/api/teachers/{teacher_id}/unassign-all	POST	Remove All Teacher Assignments
+/api/students/{id}/status	PUT	Update student status (active/graduated/withdrawn/etc)
+/api/students/graduated	GET	Get graduated students
+/api/students/withdrawn	GET	Get withdrawn students
+/api/students/{id}/history	GET	Get student status history
+/api/graduation/ceremonies	POST	Create graduation ceremony
+/api/graduation/ceremonies/{id}/students	POST	Add students to graduation
+/api/students/{id}/graduate	POST	Mark student graduated (with date)
+/api/schools/{id}/alumni	GET	Get alumni
+/api/students/{id}/withdraw	POST	Withdraw student (with reason)
+/api/students/{id}/suspend	POST	Suspend student (with period)
+/api/students/{id}/reinstate	POST	Re-enroll withdrawn/suspended
+/api/teachers/{id}/status	PUT	Update status (active/on-leave/resigned)
+/api/staff/on-leave	GET	Get staff on leave
+
+Export to Sheets
+8. Attendance Management
+Endpoint	HTTP Method	Description
+/api/authentic-locations	POST	Create Authentic Location
+/api/authentic-locations	GET	Get Authentic Locations
+/api/authentic-locations/{location_id}	GET	Get Authentic Location
+/api/authentic-locations/{location_id}	PUT	Update Authentic Location
+/api/attendance/verify-location	POST	Verify Attendance Location
+/api/attendance	POST	Create Attendance Record
+/api/attendance	GET	Get Attendance Records
+/api/attendance/bulk	POST	Create Bulk Attendance
+/api/attendance/{record_id}	GET	Get Attendance Record
+/api/attendance/{record_id}	PUT	Update Attendance Record
+/api/attendance/statistics/student/{student_id}	GET	Get Student Attendance Statistics
+/api/attendance/statistics/class/{class_id}	GET	Get Class Attendance Statistics
+
+Export to Sheets
+9. Assessments, Scores & Reports
+Endpoint	HTTP Method	Description
+/api/assessments	POST	Create Assessment
+/api/assessments	GET	Get Assessments
+/api/assessments/{assessment_id}	GET	Get Assessment
+/api/assessments/{assessment_id}	PUT	Update Assessment
+/api/scores	POST	Create Student Score (now includes assessment_component_id)
+/api/scores	GET	Get Student Scores
+/api/scores/batch	POST	Create Batch Scores
+/api/scores/{score_id}	PUT	Update Student Score
+/api/assessments/{assessment_id}/publish	POST	Publish Assessment Results
+/api/assessments/{assessment_id}/withhold	POST	Withhold Assessment Results
+/api/student/{student_id}/results	GET	Get All Student Results
+/api/reports/student/{student_id}/term/{term_id}	GET	Get Student Report Card
+
+
+
+ Assessment & Grading Management Module (Refined)
+Endpoint	HTTP Method	Description
+/api/assessment-schemes	POST	Create a new assessment scheme definition in the school's library.
+/api/assessment-schemes	GET	Get all available assessment scheme definitions.
+/api/assessment-schemes/{scheme_id}	GET	Get a specific assessment scheme definition.
+/api/assessment-schemes/{scheme_id}	PUT	Update an existing assessment scheme definition.
+/api/assessment-schemes/{scheme_id}	DELETE	Delete an assessment scheme definition.
+/api/assessment-schemes/{scheme_id}/components	POST	Add a component (e.g., 'CA', 'Exam', 'Practical') with its weight to a scheme definition.
+/api/assessment-schemes/{scheme_id}/components	GET	Get all components of a specific scheme definition.
+/api/assessment-schemes/{scheme_id}/components/{component_id}	PUT	Update a component within a scheme definition.
+/api/assessment-schemes/{scheme_id}/components/{component_id}	DELETE	Delete a component from a scheme definition.
+/api/grading-scales	POST	Create the school's grading scale.
+/api/grading-scales	GET	Get the school's grading scale.
+/api/grading-scales/{grade_id}	PUT	Update a specific grade level (e.g., edit the 'A' range).
+/api/grading-scales/{grade_id}	DELETE	Delete a specific grade level.
+/api/classes/{class_id}/subjects/{subject_id}/assign-scheme	POST	Assign an existing assessment scheme (scheme_id in body) to a specific Class/Subject combination.
+/api/classes/{class_id}/subjects/{subject_id}/scheme	GET	Get the currently assigned assessment scheme for a Class/Subject.
+/api/classes/{class_id}/subjects/{subject_id}/assign-scheme	DELETE	Remove the assignment of a scheme from a Class/Subject.
+
+Export to Sheets
+11. Fee & Payment Management
+Endpoint	HTTP Method	Description
+/api/fee-types	POST	Create Fee Type dpmr sre mandatory some are not
+/api/fee-types	GET	Get Fee Types
+/api/fee-types/{fee_type_id}	GET	Get Fee Type
+/api/fee-types/{fee_type_id}	PUT	Update Fee Type
+/api/student-fees	POST	Create Student Fee
+/api/student-fees	GET	Get Student Fees
+/api/student-fees/bulk	POST	Create Bulk Student Fees
+/api/student-fees/{fee_id}	GET	Get Student Fee
+/api/student-fees/{fee_id}	PUT	Update Student Fee
+/api/student-fees/summary/{student_id}	GET	Get Fee Summary
+/api/payments	POST	Create Payment
+/api/payments	GET	Get Payments
+/api/payments/paystack/initialize	POST	Initialize Paystack Payment
+/api/subscriptions/paystack/initialize	POST	Initialize Subscription Payment
+/api/payments/paystack/verify	POST	Verify Paystack Payment
+
+
+Communication & Behavior
+Endpoint	HTTP Method	Description
+/api/messages	POST	Create Message
+/api/messages	GET	Get Messages
+/api/messages/{message_id}/read	PUT	Mark Message As Read
+/api/messages/unread-count	GET	Get Unread Message Count
+/api/behavior-reports	POST	Create Behavior Report
+/api/behavior-reports	GET	Get Behavior Reports
+/api/behavior-reports/{report_id}	GET	Get Behavior Report
+/api/behavior-reports/{report_id}	PUT	Update Behavior Report
+
+Export to Sheets
+13. Admin & System
+Endpoint	HTTP Method	Description
+/api/audit-logs	GET	Get Audit Logs
+/api/admin/subscription-plans	POST	Create Subscription Plan
+/api/admin/subscription-plans	GET	Get Subscription Plans
+/api/admin/subscription-plans/{plan_id}	PUT	Update Subscription Plan
+/api/admin/subscription-plans/{plan_id}/features	POST	Set Feature Limit
+/api/admin/subscription-plans/{plan_id}/features	GET	Get Feature Limits
+/api/admin/subscription-plans/{plan_id}/features/{feature_name}	DELETE	Delete Feature Limit
+/api/admin/analytics/subscriptions	GET	Get Subscription Analytics
+/api/admin/schools/pending	GET	Get Pending Schools
+
+School Happenings/Events Log Module (New)
+Endpoint	HTTP Method	Description
+/api/happenings	POST	Create a new school happening/event.
+/api/happenings	GET	Get all school happenings (with filters for date, category, target audience).
+/api/happenings/{happenings_id}	GET	Get details of a specific happening.
+/api/happenings/{happenings_id}	PUT	Update details of a specific happening.
+/api/happenings/{happenings_id}	DELETE	Delete a specific happening.
+/api/happenings/categories	GET	Get predefined categories for happenings (e.g., "Event", "Announcement", "Incident").
+/api/happenings/categories	POST	Create a new happening category.
+15. Timetable Module (New)
+Endpoint	HTTP Method	Description
+/api/timetables/periods	POST	Define a new standard period/time slot (e.g., "Period 1", "8:00-8:45").
+/api/timetables/periods	GET	Get all defined periods/time slots.
+/api/timetables/periods/{period_id}	PUT	Update a standard period/time slot.
+/api/timetables/periods/{period_id}	DELETE	Delete a standard period/time slot.
+/api/timetables	POST	Create a new timetable entry (e.g., SS1 Maths on Monday, Period 1, Teacher X, Room Y).
+/api/timetables	GET	Get all timetable entries (with filters for class, subject, teacher, day, session).
+/api/timetables/{timetable_entry_id}	GET	Get details of a specific timetable entry.
+/api/timetables/{timetable_entry_id}	PUT	Update a specific timetable entry.
+/api/timetables/{timetable_entry_id}	DELETE	Delete a specific timetable entry.
+/api/timetables/class/{class_id}	GET	Get the timetable for a specific class for the current/given session.
+/api/timetables/teacher/{teacher_id}	GET	Get the timetable for a specific teacher for the current/given session.
+
+
+Modularity and Granularity Best Practices
+Separate Routers:
+
+Organize your endpoints into distinct FastAPI APIRouter instances. Each module (Users, Schools, Students, Attendance, Timetable, Admissions, etc.) should have its own router.
+This keeps your code clean and manageable.
+Python
+
+# app/main.py
+from fastapi import FastAPI
+from app.routers import users, schools, students, timetable, admissions, # ... and so on
+
+app = FastAPI()
+
+app.include_router(users.router)
+app.include_router(users.role_router) # For roles and permissions
+app.include_router(users.permission_router)
+app.include_router(schools.router)
+app.include_router(students.router)
+app.include_router(timetable.router)
+app.include_router(admissions.router)
+# Include all other routers here
+Fine-Grained Permissions:
+
+The resource:action pattern (user:read, student:graduate, attendance:take_period) is crucial. Avoid generic permissions like can_manage_users. Instead, break it down to user:create, user:read, user:update, user:delete.
+This allows you to create highly specific roles (e.g., a "Class Teacher" role might have attendance:take_period and score:write, but not assessment:create).
+Dependency Injection for Reusability:
+
+As shown with has_permission and verify_school_access, FastAPI's dependency injection is your best friend. Create small, reusable functions that encapsulate common logic (authentication, authorization, database sessions).
+Pydantic Models for Request/Response:
+
+Define clear Pydantic models for your request bodies (UserCreate, UserUpdate, DepartmentCreate) and response models (UserRead, DepartmentRead). This ensures data integrity, provides validation, and automatically generates OpenAPI documentation.
+Multi-Tenancy (School-Specific Data):
+
+Every relevant table (users, roles, departments, classes, students, teachers, assessments, fees, etc.) should have a school_id foreign key.
+When a user makes a request, your authorization dependencies should ensure they can only access data belonging to their school_id (unless they have a global "SuperAdmin" role or specific "admin:all_schools" permission).
+This is enforced in the verify_school_access dependency and also explicitly within API routes when filtering data.
+Admin UI for RBAC Management:
+
+The endpoints for /api/roles, /api/permissions, /api/user_roles, /api/role_permissions will be consumed by your Web Interface (Next.js) for an Admin Panel. This is where administrators can define roles, assign permissions to roles, and assign roles to users without touching the database directly.
+Initial Seed Data:
+
+Have a script to seed your database with initial global roles (e.g., 'SuperAdmin'), a default 'Admin' role, and all your predefined permissions (user:read, student:graduate, etc.) when setting up a new environment. This ensures your system starts with a functional RBAC foundation.
+By following these principles, you'll build a highly modular backend that is flexible enough to handle the diverse permission needs of different school types and staff roles. Good luck!
+
+
+Okay, I will add the endpoints for "Attendance Per Period" to the list. These will typically interact with the Timetable module's data to ensure attendance is taken for scheduled periods.
+
+---
+
+## Timetable & Period Attendance Module Backend Endpoints
+
+This expanded list now includes endpoints for managing daily time slots (periods), creating schedules, and specifically for recording and retrieving attendance on a period-by-period basis.
+
+---
+
+### **1. Period Management Endpoints**
+
+* `POST /api/timetables/periods/{school_id}`
+* `GET /api/timetables/periods/{school_id}`
+* `GET /api/timetables/periods/{school_id}/{period_id}`
+* `PUT /api/timetables/periods/{school_id}/{period_id}`
+* `DELETE /api/timetables/periods/{school_id}/{period_id}`
+
+### **2. Timetable Entry Management Endpoints**
+
+* `POST /api/timetables/{school_id}/entries`
+* `GET /api/timetables/{school_id}/entries`
+* `GET /api/timetables/{school_id}/entries/{entry_id}`
+* `PUT /api/timetables/{school_id}/entries/{entry_id}`
+* `DELETE /api/timetables/{school_id}/entries/{entry_id}`
+
+### **3. Timetable Views Endpoints**
+
+* `GET /api/timetables/{school_id}/class/{class_id}`
+* `GET /api/timetables/{school_id}/teacher/{teacher_id}`
+* `GET /api/timetables/{school_id}/room/{room_id}`
+
+---
+
+### **4. Period Attendance Endpoints (New)**
+
+These endpoints are for recording and managing attendance specifically for each scheduled period.
+
+* **`POST /api/attendance/period/{school_id}`**
+    * **Description:** Records period-specific attendance for a group of students in a class, typically taken by a teacher for a scheduled period.
+    * **Permissions:** `attendance:period:take`
+    * **Request Body:**
+        * `date` (date string): The date the attendance is taken.
+        * `academic_session_id` (integer): ID of the academic session.
+        * `term_id` (integer): ID of the term.
+        * `class_id` (integer): ID of the class for which attendance is being taken.
+        * `subject_id` (integer): ID of the subject being taught during this period.
+        * `teacher_id` (integer): ID of the teacher taking attendance.
+        * `period_id` (integer): ID of the specific period (e.g., Period 1).
+        * `verified_location_id` (integer): ID of the authenticated location where attendance was taken (from `/api/attendance/verify-location`).
+        * `students_attendance` (array of objects):
+            * `student_id` (integer)
+            * `status` (string): e.g., "PRESENT", "ABSENT", "LATE", "EXCUSED"
+            * `notes` (string, optional): Any specific notes for this student's attendance.
+    * **Success Response:** Confirmation of attendance record creation, potentially with a summary.
+
+* **`PUT /api/attendance/period/{school_id}/{attendance_record_id}`**
+    * **Description:** Updates a specific period attendance record for a student.
+    * **Permissions:** `attendance:period:update`
+    * **Request Body:** (Partial update allowed)
+        * `status` (string, optional): New attendance status.
+        * `notes` (string, optional): Updated notes.
+        * `verified_location_id` (integer, optional): If re-verifying location.
+    * **Success Response:** Updated attendance record details.
+
+* **`GET /api/attendance/period/{school_id}`**
+    * **Description:** Retrieves period attendance records for a specific school, with various filtering options.
+    * **Permissions:** `attendance:period:read`
+    * **Query Parameters (all optional):**
+        * `start_date` (date string)
+        * `end_date` (date string)
+        * `academic_session_id` (integer)
+        * `term_id` (integer)
+        * `class_id` (integer)
+        * `subject_id` (integer)
+        * `teacher_id` (integer)
+        * `student_id` (integer)
+        * `period_id` (integer)
+        * `status` (string): Filter by attendance status (e.g., "ABSENT").
+    * **Success Response:** A list of period attendance records, including student, class, subject, teacher, and period details.
+
+* **`GET /api/attendance/period/{school_id}/student/{student_id}/statistics`**
+    * **Description:** Provides period attendance statistics for a specific student (e.g., total periods, present count, absent count, late count, excused count).
+    * **Permissions:** `attendance:period:read_statistics`
+    * **Query Parameters (all optional):**
+        * `start_date` (date string)
+        * `end_date` (date string)
+        * `academic_session_id` (integer)
+        * `term_id` (integer)
+        * `subject_id` (integer)
+    * **Success Response:** An object with attendance statistics for the student.
+
+* **`GET /api/attendance/period/{school_id}/class/{class_id}/subject/{subject_id}/statistics`**
+    * **Description:** Provides period attendance statistics for a specific class and subject combination (e.g., summary of attendance for all students in that class for that subject).
+    * **Permissions:** `attendance:period:read_statistics`
+    * **Query Parameters (all optional):**
+        * `start_date` (date string)
+        * `end_date` (date string)
+        * `academic_session_id` (integer)
+        * `term_id` (integer)
+        * `period_id` (integer)
+    * **Success Response:** An object with aggregated attendance statistics for the class/subject, possibly broken down by student or status.
+
+* **`GET /api/attendance/period/{school_id}/teacher/{teacher_id}/statistics`**
+    * **Description:** Provides attendance statistics for periods taught by a specific teacher.
+    * **Permissions:** `attendance:period:read_statistics`
+    * **Query Parameters (all optional):**
+        * `start_date` (date string)
+        * `end_date` (date string)
+        * `academic_session_id` (integer)
+        * `term_id` (integer)
+    * **Success Response:** An object with aggregated attendance statistics for the teacher's periods.
+
+
+Endpoint Categories:
+
+1. Report Generation Endpoints
+These endpoints are responsible for triggering the creation and delivery of reports based on requested data, format, and design.
+
+GET /api/reports/student/{student_id}/generate
+Description: Generates a comprehensive report (e.g., report card, results summary) for a specific student. The report's format (PDF, CSV, XLSX) and visual design will be determined by query parameters. It will leverage pre-designed or custom templates and incorporate school branding.
+GET /api/reports/class/{class_id}/generate
+Description: Generates a report (e.g., class performance summary, attendance report) for an entire class. Similar to the student report, format and design are specified via query parameters, using available templates and school branding.
+2. Report Template Management Endpoints
+These endpoints allow school administrators to manage the report templates available for their school. This includes system-provided pre-designed templates and custom templates uploaded by the school, enabling dynamic selection and customization from the web-based report card builder.
+
+POST /api/report-templates/{school_id}
+Description: Uploads a new custom report template (which could be an HTML file for PDF generation, or a configuration for other formats) for a specific school. This enables the school to extend the available designs beyond the pre-designed options.
+GET /api/report-templates/{school_id}
+Description: Retrieves a list of all available report templates for a specific school. This list includes both the system's pre-designed templates and any custom templates uploaded by the school, providing options for the report card builder.
+GET /api/report-templates/{school_id}/{template_id}
+Description: Retrieves the content and detailed metadata of a specific report template, identified by its ID. This is crucial for the web-based report card builder to preview and potentially modify template content.
+PUT /api/report-templates/{school_id}/{template_id}
+Description: Updates the content or metadata of an existing report template. This allows for modification of custom templates and potentially the activation/deactivation of pre-designed ones.
+DELETE /api/report-templates/{school_id}/{template_id}
+Description: Deletes a specific custom report template from a school's library. Pre-designed, system-provided templates should not be deletable.
+3. School Branding & Customization Endpoints
+These endpoints allow administrators to manage school-specific branding elements that will be dynamically incorporated into reports. This ensures all generated documents align with the school's identity.
+
+POST /api/schools/{school_id}/logo
+Description: Uploads or updates the official logo image for the school. This logo will then be used in all generated reports that support it.
+GET /api/schools/{school_id}/branding
+Description: Retrieves school-specific branding information, including the URL to the uploaded logo, primary and secondary color schemes, and slogan.
+PUT /api/schools/{school_id}/branding
+Description: Updates various school-specific branding details, such as color codes or a slogan, which can be applied to report designs.
