@@ -1,0 +1,33 @@
+modules = ["python-3.11"]
+
+[nix]
+channel = "stable-24_05"
+packages = ["libxcrypt"]
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Education ERP Server"
+
+[[workflows.workflow]]
+name = "Education ERP Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pip install fastapi uvicorn sqlalchemy psycopg2-binary pydantic email-validator python-jose[cryptography] passlib[bcrypt] python-multipart httpx && python main.py"
+waitForPort = 5000
+
+[deployment]
+run = ["sh", "-c", "pip install fastapi uvicorn sqlalchemy psycopg2-binary pydantic email-validator python-jose[cryptography] passlib[bcrypt] python-multipart httpx && python main.py"]
+
+[[ports]]
+localPort = 5000
+externalPort = 80

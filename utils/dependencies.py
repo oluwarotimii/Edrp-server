@@ -1,0 +1,400 @@
+from typing import Generator, Optional
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
+from jose import JWTError, jwt
+
+from database import get_db
+from models.user import User
+from models.school import School
+from services.auth import verify_token
+from config import settings
+
+# Security scheme for JWT authentication
+security = HTTPBearer()
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+) -> User:
+    """Get current authenticated user"""
+    
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    try:
+        # Verify and decode the JWT token
+        username = verify_token(credentials.credentials)
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    
+    # Get user from database
+    user = db.query(User).filter(
+        (User.username == username) | (User.email == username)
+    ).first()
+    
+    if user is None:
+        raise credentials_exception
+    
+    # Check if user account is active
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is deactivated"
+        )
+    
+    # Check if user account is locked
+    if user.is_locked:
+        raise HTTPException(
+            status_code=status.HTTP_423_LOCKED,
+            detail="Account is locked due to multiple failed login attempts"
+        )
+    
+    # Check if user is approved
+    if not user.is_approved:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is pending approval"
+        )
+    
+    return user
+
+async def get_current_school(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> int:
+    """Get current user's school ID"""
+    
+    if not current_user.school_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is not associated with any school"
+        )
+    
+    # Verify school exists and is active
+    school = db.query(School).filter(
+        School.id == current_user.school_id,
+        School.is_active == True
+    ).first()
+    
+    if not school:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="School not found or inactive"
+        )
+    
+    return current_user.school_id
+
+def require_permission(permission_name: str):
+    """Dependency factory to require specific permission"""
+    
+    def permission_checker(
+        current_user: User = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ) -> User:
+        """Check if current user has required permission"""
+        
+        # Get user permissions
+        user_permissions = set()
+        for role in current_user.roles:
+            for permission in role.permissions:
+                user_permissions.add(permission.name)
+        
+        # Check if user has the required permission
+        if permission_name not in user_permissions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Insufficient permissions. Required: {permission_name}"
+            )
+        
+        return current_user
+    
+    return permission_checker
+
+def require_any_permission(permission_names: list):
+    """Dependency factory to require any of the specified permissions"""
+    
+    def permission_checker(
+        current_user: User = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ) -> User:
+        """Check if current user has any of the required permissions"""
+        
+        # Get user permissions
+        user_permissions = set()
+        for role in current_user.roles:
+            for permission in role.permissions:
+                user_permissions.add(permission.name)
+        
+        # Check if user has any of the required permissions
+        if not any(perm in user_permissions for perm in permission_names):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Insufficient permissions. Required any of: {', '.join(permission_names)}"
+            )
+        
+        return current_user
+    
+    return permission_checker
+
+def require_all_permissions(permission_names: list):
+    """Dependency factory to require all of the specified permissions"""
+    
+    def permission_checker(
+        current_user: User = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ) -> User:
+        """Check if current user has all of the required permissions"""
+        
+        # Get user permissions
+        user_permissions = set()
+        for role in current_user.roles:
+            for permission in role.permissions:
+                user_permissions.add(permission.name)
+        
+        # Check if user has all of the required permissions
+        missing_permissions = [perm for perm in permission_names if perm not in user_permissions]
+        if missing_permissions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Insufficient permissions. Missing: {', '.join(missing_permissions)}"
+            )
+        
+        return current_user
+    
+    return permission_checker
+
+def require_role(role_name: str):
+    """Dependency factory to require specific role"""
+    
+    def role_checker(
+        current_user: User = Depends(get_current_user)
+    ) -> User:
+        """Check if current user has required role"""
+        
+        user_roles = [role.name for role in current_user.roles]
+        
+        if role_name not in user_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Access denied. Required role: {role_name}"
+            )
+        
+        return current_user
+    
+    return role_checker
+
+def require_any_role(role_names: list):
+    """Dependency factory to require any of the specified roles"""
+    
+    def role_checker(
+        current_user: User = Depends(get_current_user)
+    ) -> User:
+        """Check if current user has any of the required roles"""
+        
+        user_roles = [role.name for role in current_user.roles]
+        
+        if not any(role in user_roles for role in role_names):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Access denied. Required any role: {', '.join(role_names)}"
+            )
+        
+        return current_user
+    
+    return role_checker
+
+async def get_optional_current_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    db: Session = Depends(get_db)
+) -> Optional[User]:
+    """Get current user if authenticated, otherwise return None"""
+    
+    if not credentials:
+        return None
+    
+    try:
+        username = verify_token(credentials.credentials)
+        if username is None:
+            return None
+        
+        user = db.query(User).filter(
+            (User.username == username) | (User.email == username)
+        ).first()
+        
+        if user and user.is_active and not user.is_locked and user.is_approved:
+            return user
+    except JWTError:
+        pass
+    
+    return None
+
+def require_school_admin():
+    """Dependency to require school admin role"""
+    return require_any_role(["school_admin", "super_admin"])
+
+def require_teacher():
+    """Dependency to require teacher role"""
+    return require_any_role(["teacher", "school_admin", "super_admin"])
+
+def require_student():
+    """Dependency to require student role"""
+    return require_any_role(["student", "teacher", "school_admin", "super_admin"])
+
+def require_parent():
+    """Dependency to require parent role"""
+    return require_any_role(["parent", "school_admin", "super_admin"])
+
+def require_staff():
+    """Dependency to require any staff role"""
+    return require_any_role(["teacher", "accountant", "school_admin", "super_admin"])
+
+async def get_user_school(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> School:
+    """Get current user's school object"""
+    
+    if not current_user.school_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is not associated with any school"
+        )
+    
+    school = db.query(School).filter(
+        School.id == current_user.school_id,
+        School.is_active == True
+    ).first()
+    
+    if not school:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="School not found or inactive"
+        )
+    
+    return school
+
+def require_school_approved():
+    """Dependency to require school to be approved"""
+    
+    def school_checker(
+        school: School = Depends(get_user_school)
+    ) -> School:
+        """Check if school is approved"""
+        
+        if not school.is_approved:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="School is not approved for this operation"
+            )
+        
+        return school
+    
+    return school_checker
+
+async def validate_school_access(
+    school_id: int,
+    current_user: User = Depends(get_current_user)
+) -> bool:
+    """Validate that current user has access to the specified school"""
+    
+    # Super admins can access any school
+    user_roles = [role.name for role in current_user.roles]
+    if "super_admin" in user_roles:
+        return True
+    
+    # Other users can only access their own school
+    if current_user.school_id != school_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied to this school"
+        )
+    
+    return True
+
+def require_same_school_or_admin(resource_school_id: int):
+    """Dependency factory to require same school or admin access"""
+    
+    def school_checker(
+        current_user: User = Depends(get_current_user)
+    ) -> User:
+        """Check if user can access resource from specified school"""
+        
+        user_roles = [role.name for role in current_user.roles]
+        
+        # Super admins can access any school
+        if "super_admin" in user_roles:
+            return current_user
+        
+        # Other users must be from the same school
+        if current_user.school_id != resource_school_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied to this school's resources"
+            )
+        
+        return current_user
+    
+    return school_checker
+
+# Rate limiting dependency (placeholder for implementation with Redis)
+async def rate_limit(
+    identifier: str,
+    max_requests: int = 100,
+    window_seconds: int = 3600,
+    current_user: User = Depends(get_current_user)
+) -> bool:
+    """Rate limiting dependency"""
+    
+    # In a real implementation, this would use Redis to track request counts
+    # For now, just return True
+    return True
+
+# IP address whitelist dependency
+async def require_whitelisted_ip(
+    request,
+    allowed_ips: Optional[list] = None
+) -> bool:
+    """Require request to come from whitelisted IP"""
+    
+    if not allowed_ips:
+        return True
+    
+    from utils.security import SecurityUtils
+    client_ip = SecurityUtils.get_client_ip(request)
+    
+    if client_ip not in allowed_ips:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied from this IP address"
+        )
+    
+    return True
+
+# API key authentication (for external integrations)
+async def require_api_key(
+    api_key: str,
+    db: Session = Depends(get_db)
+) -> bool:
+    """Require valid API key for access"""
+    
+    # In a real implementation, you would:
+    # 1. Check api_key against a table of valid API keys
+    # 2. Verify the key is active and not expired
+    # 3. Log the API usage
+    
+    # For now, just check against a setting
+    valid_api_keys = getattr(settings, 'VALID_API_KEYS', [])
+    
+    if api_key not in valid_api_keys:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid API key"
+        )
+    
+    return True

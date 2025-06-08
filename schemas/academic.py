@@ -1,0 +1,130 @@
+from pydantic import BaseModel
+from typing import Optional, List
+from datetime import datetime, date
+
+class DepartmentBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    head_teacher_id: Optional[int] = None
+
+class DepartmentCreate(DepartmentBase):
+    pass
+
+class DepartmentUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    head_teacher_id: Optional[int] = None
+
+class Department(DepartmentBase):
+    id: int
+    school_id: int
+    is_active: bool = True
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class ClassBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    class_teacher_id: Optional[int] = None
+    capacity: Optional[int] = None
+    room_number: Optional[str] = None
+    grade_level: Optional[int] = None
+
+class ClassCreate(ClassBase):
+    pass
+
+class ClassUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    class_teacher_id: Optional[int] = None
+    capacity: Optional[int] = None
+    room_number: Optional[str] = None
+    grade_level: Optional[int] = None
+
+class Class(ClassBase):
+    id: int
+    school_id: int
+    is_active: bool = True
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class SubjectBase(BaseModel):
+    name: str
+    code: Optional[str] = None
+    description: Optional[str] = None
+    department_id: Optional[int] = None
+    is_core: bool = False
+    credit_units: int = 1
+
+class SubjectCreate(SubjectBase):
+    pass
+
+class SubjectUpdate(BaseModel):
+    name: Optional[str] = None
+    code: Optional[str] = None
+    description: Optional[str] = None
+    department_id: Optional[int] = None
+    is_core: Optional[bool] = None
+    credit_units: Optional[int] = None
+
+class Subject(SubjectBase):
+    id: int
+    school_id: int
+    is_active: bool = True
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class AcademicSessionBase(BaseModel):
+    name: str
+    start_date: date
+    end_date: date
+    is_current: bool = False
+
+class AcademicSessionCreate(AcademicSessionBase):
+    pass
+
+class AcademicSessionUpdate(BaseModel):
+    name: Optional[str] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    is_current: Optional[bool] = None
+
+class AcademicSession(AcademicSessionBase):
+    id: int
+    school_id: int
+    is_active: bool = True
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class TermBase(BaseModel):
+    name: str
+    academic_session_id: int
+    start_date: date
+    end_date: date
+    is_current: bool = False
+
+class TermCreate(TermBase):
+    pass
+
+class TermUpdate(BaseModel):
+    name: Optional[str] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    is_current: Optional[bool] = None
+
+class Term(TermBase):
+    id: int
+    school_id: int
+    is_active: bool = True
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

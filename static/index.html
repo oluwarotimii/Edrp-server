@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Education ERP System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #059669;
+            --warning-color: #d97706;
+            --danger-color: #dc2626;
+            --dark-color: #1e293b;
+            --light-color: #f8fafc;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+        }
+
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+            min-height: 100vh;
+            width: 280px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-collapsed {
+            width: 60px;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-logo {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .sidebar-toggle {
+            color: white;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .sidebar-menu {
+            padding: 1rem 0;
+        }
+
+        .menu-item {
+            display: block;
+            color: rgba(255,255,255,0.8);
+            padding: 12px 1.5rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .menu-item.active {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-right: 3px solid white;
+        }
+
+        .menu-item i {
+            width: 20px;
+            margin-right: 10px;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            transition: all 0.3s ease;
+            min-height: 100vh;
+        }
+
+        .main-content.expanded {
+            margin-left: 60px;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin: 0;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .notification-icon {
+            position: relative;
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .content-area {
+            padding: 1.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .stat-card-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-card-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--dark-color);
+            margin: 0;
+        }
+
+        .stat-card-label {
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card-change {
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .change-positive {
+            color: var(--success-color);
+        }
+
+        .change-negative {
+            color: var(--danger-color);
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+            color: var(--dark-color);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--dark-color);
+        }
+
+        .table {
+            width: 100%;
+            margin: 0;
+        }
+
+        .table th {
+            background: var(--light-color);
+            font-weight: 600;
+            color: var(--dark-color);
+            border-bottom: 2px solid var(--border-color);
+            padding: 1rem;
+        }
+
+        .table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: var(--success-color);
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: var(--warning-color);
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: var(--danger-color);
+        }
+
+        .badge-primary {
+            background: #dbeafe;
+            color: var(--primary-color);
+        }
+
+        .form-control {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            border-color: #bbf7d0;
+            color: var(--success-color);
+        }
+
+        .alert-danger {
+            background: #fee2e2;
+            border-color: #fecaca;
+            color: var(--danger-color);
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            border-color: #fde68a;
+            color: var(--warning-color);
+        }
+
+        .modal {
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            border-top: 1px solid var(--border-color);
+            padding: 1.5rem;
+        }
+
+        .loading {
+            display: none;
+        }
+
+        .loading.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            z-index: 9999;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .quick-action {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: var(--dark-color);
+        }
+
+        .quick-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            text-decoration: none;
+            color: var(--primary-color);
+        }
+
+        .quick-action-icon {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .quick-action-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .quick-action-desc {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .offline-indicator {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background: var(--warning-color);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .offline-indicator.show {
+            display: block;
+        }
+
+        .sync-indicator {
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .sync-indicator.show {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Spinner -->
+    <div class="loading" id="loadingSpinner">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Offline Indicator -->
+    <div class="offline-indicator" id="offlineIndicator">
+        <i class="fas fa-wifi-slash"></i> You are offline. Changes will sync when connection is restored.
+    </div>
+
+    <!-- Sync Indicator -->
+    <div class="sync-indicator" id="syncIndicator">
+        <div class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></div>
+        <span>Syncing data...</span>
+    </div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="#" class="sidebar-logo" id="sidebarLogo">
+                <i class="fas fa-graduation-cap"></i>
+                <span class="logo-text">EduERP</span>
+            </a>
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="sidebar-menu" id="sidebarMenu">
+            <!-- Menu items will be dynamically populated based on user permissions -->
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <header class="top-bar">
+            <h1 class="page-title" id="pageTitle">Dashboard</h1>
+            <div class="user-menu">
+                <div class="notification-icon" id="notificationIcon">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                </div>
+                <div class="user-avatar" id="userAvatar">
+                    <span id="userInitials">--</span>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-outline dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <span id="userName">User</span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="showProfile()">
+                            <i class="fas fa-user"></i> Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="showSettings()">
+                            <i class="fas fa-cog"></i> Settings
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="content-area" id="contentArea">
+            <!-- Login Form (shown when not authenticated) -->
+            <div id="loginForm" style="display: none;">
+                <div class="row justify-content-center">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="text-center mb-4">
+                                    <i class="fas fa-graduation-cap text-primary" style="font-size: 3rem;"></i>
+                                    <h2 class="mt-3">Education ERP</h2>
+                                    <p class="text-muted">Sign in to your account</p>
+                                </div>
+                                
+                                <form id="loginFormElement">
+                                    <div class="mb-3">
+                                        <label class="form-label">Username or Email</label>
+                                        <input type="text" class="form-control" id="loginUsername" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Password</label>
+                                        <input type="password" class="form-control" id="loginPassword" required>
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="rememberMe">
+                                        <label class="form-check-label" for="rememberMe">Remember me</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-sign-in-alt"></i> Sign In
+                                    </button>
+                                </form>
+                                
+                                <div class="text-center mt-3">
+                                    <a href="#" onclick="showRegisterForm()">Don't have an account? Register here</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registration Form -->
+            <div id="registerForm" style="display: none;">
+                <div class="row justify-content-center">
+                    <div class="col-md-8 col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Register New School</h3>
+                            </div>
+                            <div class="card-body">
+                                <form id="registerFormElement">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">School Name</label>
+                                            <input type="text" class="form-control" id="schoolName" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">School Email</label>
+                                            <input type="email" class="form-control" id="schoolEmail" required>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Principal Name</label>
+                                            <input type="text" class="form-control" id="principalName" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Phone Number</label>
+                                            <input type="tel" class="form-control" id="schoolPhone" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">School Address</label>
+                                        <textarea class="form-control" id="schoolAddress" rows="3" required></textarea>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">School Type</label>
+                                            <select class="form-control" id="schoolType" required>
+                                                <option value="">Select Type</option>
+                                                <option value="primary">Primary School</option>
+                                                <option value="secondary">Secondary School</option>
+                                                <option value="mixed">Mixed (Primary & Secondary)</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Boarding School?</label>
+                                            <select class="form-control" id="isBoardingSchool">
+                                                <option value="false">Day School</option>
+                                                <option value="true">Boarding School</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Website (Optional)</label>
+                                        <input type="url" class="form-control" id="schoolWebsite">
+                                    </div>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save"></i> Register School
+                                        </button>
+                                        <button type="button" class="btn btn-outline" onclick="showLoginForm()">
+                                            <i class="fas fa-arrow-left"></i> Back to Login
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Content (shown when authenticated) -->
+            <div id="dashboardContent" style="display: none;">
+                <!-- Stats Grid -->
+                <div class="stats-grid" id="statsGrid">
+                    <!-- Stats cards will be dynamically populated -->
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions" id="quickActions">
+                    <!-- Quick action buttons will be dynamically populated -->
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Recent Activity</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="recentActivity">
+                                    <p class="text-muted text-center py-4">Loading recent activity...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Notifications</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="notificationsList">
+                                    <p class="text-muted text-center py-4">Loading notifications...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Module Content (dynamically loaded) -->
+            <div id="moduleContent" style="display: none;">
+                <!-- Module-specific content will be loaded here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Application JavaScript -->
+    <script>
+        // Global application state
+        const app = {
+            user: null,
+            school: null,
+            permissions: [],
+            currentModule: 'dashboard',
+            isOnline: navigator.onLine,
+            offlineQueue: [],
+            syncInProgress: false
+        };
+
+        // API base URL
+        const API_BASE = '/api';
+
+        // Utility functions
+        function showLoading(show = true) {
+            const spinner = document.getElementById('loadingSpinner');
+            if (show) {
+                spinner.classList.add('show');
+            } else {
+                spinner.classList.remove('show');
+            }
+        }
+
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const container = document.getElementById('contentArea');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Authentication functions
+        async function login(username, password) {
+            showLoading(true);
+            try {
+                const formData = new FormData();
+                formData.append('username', username);
+                formData.append('password', password);
+
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('access_token', data.access_token);
+                    app.user = data.user;
+                    await loadUserData();
+                    showDashboard();
+                    showAlert('Login successful!', 'success');
+                } else {
+                    showAlert(data.message || 'Login failed', 'danger');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showAlert('Network error. Please try again.', 'danger');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function registerSchool(schoolData) {
+            showLoading(true);
+            try {
+                const response = await fetch(`${API_BASE}/schools`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(schoolData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAlert('School registered successfully! Please wait for approval.', 'success');
+                    showLoginForm();
+                } else {
+                    showAlert(data.message || 'Registration failed', 'danger');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showAlert('Network error. Please try again.', 'danger');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            app.user = null;
+            app.school = null;
+            app.permissions = [];
+            showLoginForm();
+            showAlert('Logged out successfully', 'info');
+        }
+
+        // API request helper
+        async function apiRequest(endpoint, options = {}) {
+            const token = localStorage.getItem('access_token');
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
+            const config = {
+                ...options,
+                headers
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, config);
+                
+                if (response.status === 401) {
+                    logout();
+                    return null;
+                }
+
+                return response;
+            } catch (error) {
+                if (!app.isOnline) {
+                    // Queue request for later
+                    app.offlineQueue.push({ endpoint, options });
+                    throw new Error('Offline - request queued');
+                }
+                throw error;
+            }
+        }
+
+        // Load user data and permissions
+        async function loadUserData() {
+            try {
+                // Load user permissions (placeholder - would come from user roles)
+                const response = await apiRequest('/users/me');
+                if (response && response.ok) {
+                    const userData = await response.json();
+                    app.user = userData;
+                    
+                    // Load school data
+                    const schoolResponse = await apiRequest(`/schools/${userData.school_id}`);
+                    if (schoolResponse && schoolResponse.ok) {
+                        app.school = await schoolResponse.json();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        // Menu generation based on permissions
+        function generateMenu() {
+            const menuItems = [
+                { id: 'dashboard', icon: 'fas fa-tachometer-alt', label: 'Dashboard', permission: null },
+                { id: 'students', icon: 'fas fa-user-graduate', label: 'Students', permission: 'students:view' },
+                { id: 'teachers', icon: 'fas fa-chalkboard-teacher', label: 'Teachers', permission: 'teachers:view' },
+                { id: 'attendance', icon: 'fas fa-calendar-check', label: 'Attendance', permission: 'attendance:view' },
+                { id: 'assessments', icon: 'fas fa-clipboard-list', label: 'Assessments', permission: 'assessments:view' },
+                { id: 'fees', icon: 'fas fa-money-bill-wave', label: 'Fees', permission: 'student_fees:view' },
+                { id: 'timetable', icon: 'fas fa-calendar-alt', label: 'Timetable', permission: 'timetables:view' },
+                { id: 'communication', icon: 'fas fa-comments', label: 'Messages', permission: 'messages:view' },
+                { id: 'behavior', icon: 'fas fa-exclamation-triangle', label: 'Behavior Reports', permission: 'behavior_reports:view' },
+                { id: 'admissions', icon: 'fas fa-user-plus', label: 'Admissions', permission: 'admissions:view' },
+                { id: 'academic', icon: 'fas fa-book', label: 'Academic Setup', permission: 'classes:view' },
+                { id: 'happenings', icon: 'fas fa-bullhorn', label: 'Happenings', permission: 'happenings:view' },
+                { id: 'users', icon: 'fas fa-users', label: 'User Management', permission: 'users:view' },
+                { id: 'admin', icon: 'fas fa-cogs', label: 'Administration', permission: 'admin:view_statistics' }
+            ];
+
+            const sidebarMenu = document.getElementById('sidebarMenu');
+            sidebarMenu.innerHTML = '';
+
+            menuItems.forEach(item => {
+                // Check if user has permission (simplified - in real app would check actual permissions)
+                if (!item.permission || hasPermission(item.permission)) {
+                    const menuItem = document.createElement('button');
+                    menuItem.className = 'menu-item';
+                    menuItem.onclick = () => loadModule(item.id);
+                    menuItem.innerHTML = `
+                        <i class="${item.icon}"></i>
+                        <span class="menu-text">${item.label}</span>
+                    `;
+                    sidebarMenu.appendChild(menuItem);
+                }
+            });
+        }
+
+        // Permission check (placeholder)
+        function hasPermission(permission) {
+            // In a real app, this would check against user's actual permissions
+            return true; // For demo purposes, allow all
+        }
+
+        // Module loading
+        async function loadModule(moduleId) {
+            // Update active menu item
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            app.currentModule = moduleId;
+            document.getElementById('pageTitle').textContent = getModuleTitle(moduleId);
+
+            // Hide other content areas
+            document.getElementById('dashboardContent').style.display = 'none';
+            document.getElementById('moduleContent').style.display = 'none';
+
+            if (moduleId === 'dashboard') {
+                document.getElementById('dashboardContent').style.display = 'block';
+                await loadDashboardData();
+            } else {
+                document.getElementById('moduleContent').style.display = 'block';
+                await loadModuleContent(moduleId);
+            }
+        }
+
+        function getModuleTitle(moduleId) {
+            const titles = {
+                dashboard: 'Dashboard',
+                students: 'Student Management',
+                teachers: 'Teacher Management',
+                attendance: 'Attendance Management',
+                assessments: 'Assessments & Grading',
+                fees: 'Fee Management',
+                timetable: 'Timetable Management',
+                communication: 'Communication Center',
+                behavior: 'Behavior Reports',
+                admissions: 'Admissions Management',
+                academic: 'Academic Setup',
+                happenings: 'School Happenings',
+                users: 'User Management',
+                admin: 'System Administration'
+            };
+            return titles[moduleId] || 'Module';
+        }
+
+        // Dashboard data loading
+        async function loadDashboardData() {
+            try {
+                // Load statistics
+                await loadStatistics();
+                await loadQuickActions();
+                await loadRecentActivity();
+                await loadNotifications();
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        async function loadStatistics() {
+            const statsGrid = document.getElementById('statsGrid');
+            
+            // Sample statistics (in real app, these would come from API)
+            const stats = [
+                {
+                    icon: 'fas fa-user-graduate',
+                    value: '1,234',
+                    label: 'Total Students',
+                    change: '+5.2%',
+                    changeType: 'positive',
+                    color: '#3b82f6'
+                },
+                {
+                    icon: 'fas fa-chalkboard-teacher',
+                    value: '89',
+                    label: 'Total Teachers',
+                    change: '+2.1%',
+                    changeType: 'positive',
+                    color: '#10b981'
+                },
+                {
+                    icon: 'fas fa-calendar-check',
+                    value: '94.2%',
+                    label: 'Attendance Rate',
+                    change: '+1.3%',
+                    changeType: 'positive',
+                    color: '#f59e0b'
+                },
+                {
+                    icon: 'fas fa-money-bill-wave',
+                    value: '₦2.4M',
+                    label: 'Fees Collected',
+                    change: '+12.4%',
+                    changeType: 'positive',
+                    color: '#ef4444'
+                }
+            ];
+
+            statsGrid.innerHTML = stats.map(stat => `
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-icon" style="background: ${stat.color};">
+                            <i class="${stat.icon}"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-label">${stat.label}</div>
+                    <div class="stat-card-value">${stat.value}</div>
+                    <div class="stat-card-change change-${stat.changeType}">
+                        <i class="fas fa-arrow-${stat.changeType === 'positive' ? 'up' : 'down'}"></i>
+                        ${stat.change} from last month
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadQuickActions() {
+            const quickActions = document.getElementById('quickActions');
+            
+            const actions = [
+                {
+                    icon: 'fas fa-user-plus',
+                    title: 'Add Student',
+                    desc: 'Register new student',
+                    action: 'addStudent'
+                },
+                {
+                    icon: 'fas fa-calendar-check',
+                    title: 'Take Attendance',
+                    desc: 'Mark today\'s attendance',
+                    action: 'takeAttendance'
+                },
+                {
+                    icon: 'fas fa-clipboard-list',
+                    title: 'Create Assessment',
+                    desc: 'Set up new assessment',
+                    action: 'createAssessment'
+                },
+                {
+                    icon: 'fas fa-money-bill',
+                    title: 'Record Payment',
+                    desc: 'Process fee payment',
+                    action: 'recordPayment'
+                },
+                {
+                    icon: 'fas fa-envelope',
+                    title: 'Send Message',
+                    desc: 'Communicate with users',
+                    action: 'sendMessage'
+                },
+                {
+                    icon: 'fas fa-chart-line',
+                    title: 'View Reports',
+                    desc: 'Generate reports',
+                    action: 'viewReports'
+                }
+            ];
+
+            quickActions.innerHTML = actions.map(action => `
+                <a href="#" class="quick-action" onclick="handleQuickAction('${action.action}')">
+                    <div class="quick-action-icon">
+                        <i class="${action.icon}"></i>
+                    </div>
+                    <div class="quick-action-title">${action.title}</div>
+                    <div class="quick-action-desc">${action.desc}</div>
+                </a>
+            `).join('');
+        }
+
+        async function loadRecentActivity() {
+            const recentActivity = document.getElementById('recentActivity');
+            
+            // Sample recent activity
+            const activities = [
+                {
+                    icon: 'fas fa-user-plus text-success',
+                    text: 'New student John Doe was enrolled in Class 7A',
+                    time: '2 hours ago'
+                },
+                {
+                    icon: 'fas fa-calendar-check text-primary',
+                    text: 'Attendance taken for Class 10B - 45/47 students present',
+                    time: '3 hours ago'
+                },
+                {
+                    icon: 'fas fa-money-bill text-warning',
+                    text: 'Fee payment of ₦25,000 received from Sarah Johnson',
+                    time: '5 hours ago'
+                },
+                {
+                    icon: 'fas fa-clipboard-list text-info',
+                    text: 'Mathematics test scores uploaded for Class 9C',
+                    time: '1 day ago'
+                }
+            ];
+
+            recentActivity.innerHTML = activities.map(activity => `
+                <div class="d-flex align-items-start mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="${activity.icon}" style="font-size: 1.2rem;"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div>${activity.text}</div>
+                        <small class="text-muted">${activity.time}</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadNotifications() {
+            const notificationsList = document.getElementById('notificationsList');
+            
+            // Sample notifications
+            const notifications = [
+                {
+                    title: 'Parent-Teacher Meeting',
+                    message: 'Scheduled for next Friday at 2:00 PM',
+                    time: '1 hour ago',
+                    type: 'info'
+                },
+                {
+                    title: 'Fee Reminder',
+                    message: '15 students have pending fees',
+                    time: '2 hours ago',
+                    type: 'warning'
+                },
+                {
+                    title: 'Low Attendance Alert',
+                    message: 'Class 8B has 78% attendance this week',
+                    time: '1 day ago',
+                    type: 'danger'
+                }
+            ];
+
+            notificationsList.innerHTML = notifications.map(notification => `
+                <div class="d-flex align-items-start mb-3 p-2 border rounded">
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">${notification.title}</div>
+                        <div class="text-muted small">${notification.message}</div>
+                        <small class="text-muted">${notification.time}</small>
+                    </div>
+                    <span class="badge badge-${notification.type}"></span>
+                </div>
+            `).join('');
+
+            // Update notification badge
+            const badge = document.getElementById('notificationBadge');
+            if (notifications.length > 0) {
+                badge.textContent = notifications.length;
+                badge.style.display = 'flex';
+            }
+        }
+
+        // Module content loading (placeholder)
+        async function loadModuleContent(moduleId) {
+            const moduleContent = document.getElementById('moduleContent');
+            
+            moduleContent.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">${getModuleTitle(moduleId)}</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center py-5">
+                            <i class="fas fa-cog fa-spin fa-3x text-muted mb-3"></i>
+                            <h4>Module Loading...</h4>
+                            <p class="text-muted">
+                                The ${getModuleTitle(moduleId)} module is being loaded. 
+                                This would contain the full functionality for managing ${moduleId}.
+                            </p>
+                            <div class="mt-4">
+                                <button class="btn btn-primary" onclick="loadModule('dashboard')">
+                                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Quick action handlers
+        function handleQuickAction(action) {
+            showAlert(`${action} functionality would be implemented here`, 'info');
+        }
+
+        // Form display functions
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('dashboardContent').style.display = 'none';
+            document.getElementById('moduleContent').style.display = 'none';
+        }
+
+        function showRegisterForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('dashboardContent').style.display = 'none';
+            document.getElementById('moduleContent').style.display = 'none';
+        }
+
+        function showDashboard() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('dashboardContent').style.display = 'block';
+            document.getElementById('moduleContent').style.display = 'none';
+            
+            // Update user display
+            if (app.user) {
+                document.getElementById('userName').textContent = `${app.user.first_name} ${app.user.last_name}`;
+                document.getElementById('userInitials').textContent = 
+                    `${app.user.first_name[0]}${app.user.last_name[0]}`.toUpperCase();
+            }
+            
+            generateMenu();
+            loadDashboardData();
+        }
+
+        // Profile and settings functions
+        function showProfile() {
+            showAlert('Profile management would be implemented here', 'info');
+        }
+
+        function showSettings() {
+            showAlert('Settings would be implemented here', 'info');
+        }
+
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            sidebar.classList.toggle('sidebar-collapsed');
+            mainContent.classList.toggle('expanded');
+        });
+
+        // Form event listeners
+        document.getElementById('loginFormElement').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            login(username, password);
+        });
+
+        document.getElementById('registerFormElement').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const schoolData = {
+                name: document.getElementById('schoolName').value,
+                email: document.getElementById('schoolEmail').value,
+                principal_name: document.getElementById('principalName').value,
+                phone: document.getElementById('schoolPhone').value,
+                address: document.getElementById('schoolAddress').value,
+                school_type: document.getElementById('schoolType').value,
+                is_boarding_school: document.getElementById('isBoardingSchool').value === 'true',
+                website: document.getElementById('schoolWebsite').value || null
+            };
+            
+            registerSchool(schoolData);
+        });
+
+        // Online/Offline detection
+        window.addEventListener('online', function() {
+            app.isOnline = true;
+            document.getElementById('offlineIndicator').classList.remove('show');
+            syncOfflineData();
+        });
+
+        window.addEventListener('offline', function() {
+            app.isOnline = false;
+            document.getElementById('offlineIndicator').classList.add('show');
+        });
+
+        // Offline sync functionality
+        async function syncOfflineData() {
+            if (app.syncInProgress || app.offlineQueue.length === 0) return;
+            
+            app.syncInProgress = true;
+            document.getElementById('syncIndicator').classList.add('show');
+            
+            try {
+                for (const request of app.offlineQueue) {
+                    await apiRequest(request.endpoint, request.options);
+                }
+                app.offlineQueue = [];
+                showAlert('Data synchronized successfully', 'success');
+            } catch (error) {
+                console.error('Sync failed:', error);
+                showAlert('Some data could not be synchronized', 'warning');
+            } finally {
+                app.syncInProgress = false;
+                document.getElementById('syncIndicator').classList.remove('show');
+            }
+        }
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', async function() {
+            const token = localStorage.getItem('access_token');
+            
+            if (token) {
+                showLoading(true);
+                try {
+                    await loadUserData();
+                    if (app.user) {
+                        showDashboard();
+                    } else {
+                        showLoginForm();
+                    }
+                } catch (error) {
+                    console.error('Error loading user data:', error);
+                    showLoginForm();
+                } finally {
+                    showLoading(false);
+                }
+            } else {
+                showLoginForm();
+            }
+
+            // Set initial online status
+            if (!app.isOnline) {
+                document.getElementById('offlineIndicator').classList.add('show');
+            }
+        });
+
+        // Service Worker registration for offline support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                console.log('ServiceWorker registration successful');
+            }).catch(function(error) {
+                console.log('ServiceWorker registration failed');
+            });
+        }
+    </script>
+</body>
+</html>
