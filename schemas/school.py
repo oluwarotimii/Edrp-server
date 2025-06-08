@@ -38,6 +38,9 @@ class School(SchoolBase):
     class Config:
         from_attributes = True
 
+class SchoolResponse(School):
+    pass
+
 class JoinSchoolRequest(BaseModel):
     join_code: str
     role: str = "student"

@@ -10,7 +10,7 @@ from database import engine, Base
 from routers import (
     schools, users, students, teachers, academic, 
     attendance, assessments, fees, communication, 
-    timetable, admissions, admin, happenings
+    timetable, admissions, admin, happenings, auth, super_admin
 )
 from utils.exceptions import setup_exception_handlers
 
@@ -42,10 +42,11 @@ app.add_middleware(
 setup_exception_handlers(app)
 
 # Include routers
+app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
 app.include_router(schools.router, prefix="/api", tags=["schools"])
-app.include_router(users.router, prefix="/api/auth", tags=["authentication"])
 app.include_router(users.role_router, prefix="/api", tags=["roles"])
 app.include_router(users.permission_router, prefix="/api", tags=["permissions"])
+app.include_router(super_admin.router, prefix="/api/super-admin", tags=["super-admin"])
 app.include_router(students.router, prefix="/api", tags=["students"])
 app.include_router(teachers.router, prefix="/api", tags=["teachers"])
 app.include_router(academic.router, prefix="/api", tags=["academic"])

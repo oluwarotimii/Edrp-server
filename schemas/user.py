@@ -15,6 +15,8 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    school_id: Optional[int] = None
+    role_ids: Optional[List[int]] = []
 
 class UserUpdate(BaseModel):
     first_name: Optional[str] = None
@@ -46,6 +48,13 @@ class User(UserBase):
 class UserLogin(BaseModel):
     username: str
     password: str
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+class UserResponse(User):
+    pass
 
 class Token(BaseModel):
     access_token: str

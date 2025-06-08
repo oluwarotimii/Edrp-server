@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin Dashboard - Education ERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1f2937;
+            --light-color: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .btn-action {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            margin: 0 0.25rem;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-active { background: #dcfce7; color: #166534; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-inactive { background: #fee2e2; color: #991b1b; }
+
+        .metric-card {
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .metric-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .schools-icon { color: var(--primary-color); }
+        .users-icon { color: var(--secondary-color); }
+        .revenue-icon { color: var(--success-color); }
+        .growth-icon { color: var(--warning-color); }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-crown me-2"></i>
+                Education ERP - Super Admin
+            </a>
+            <div class="navbar-nav ms-auto">
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>
+                        <span id="adminName">System Administrator</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- System Overview -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="metric-card">
+                        <div class="metric-icon schools-icon">
+                            <i class="fas fa-school"></i>
+                        </div>
+                        <div class="stat-number text-primary" id="totalSchools">0</div>
+                        <div class="stat-label">Total Schools</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="metric-card">
+                        <div class="metric-icon users-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-number text-info" id="totalUsers">0</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="metric-card">
+                        <div class="metric-icon revenue-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-number text-success" id="totalRevenue">$0</div>
+                        <div class="stat-label">Total Revenue</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="metric-card">
+                        <div class="metric-icon growth-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-number text-warning" id="newSchools30d">0</div>
+                        <div class="stat-label">New Schools (30d)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schools Management -->
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <div class="table-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Schools Management</h5>
+                        <div>
+                            <select class="form-select form-select-sm" id="schoolFilter" onchange="filterSchools()">
+                                <option value="">All Schools</option>
+                                <option value="active">Active</option>
+                                <option value="pending">Pending Approval</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>School Name</th>
+                                    <th>Email</th>
+                                    <th>Students</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schoolsTable">
+                                <!-- Schools will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="chart-container">
+                    <h6 class="mb-3">School Growth Trend</h6>
+                    <canvas id="growthChart" width="400" height="200"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h6 class="mb-3">System Health</h6>
+                    <div id="systemHealth">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Database Status:</span>
+                            <span class="badge bg-success" id="dbStatus">Healthy</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Active Schools:</span>
+                            <span id="activeSchoolsCount">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Pending Approvals:</span>
+                            <span id="pendingApprovalsCount">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Performing Schools -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="table-container">
+                    <h5 class="mb-3">Top Performing Schools</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>School Name</th>
+                                    <th>Total Students</th>
+                                    <th>Revenue (30d)</th>
+                                    <th>Growth Rate</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topSchoolsTable">
+                                <!-- Top schools will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let authToken = localStorage.getItem('authToken');
+        let currentUser = null;
+
+        // Check authentication
+        if (!authToken) {
+            window.location.href = '/login.html';
+        }
+
+        // API calls
+        async function apiCall(endpoint, options = {}) {
+            const response = await fetch(endpoint, {
+                ...options,
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+
+            if (response.status === 401) {
+                localStorage.removeItem('authToken');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            return response.json();
+        }
+
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                const dashboard = await apiCall('/api/super-admin/dashboard');
+                updateDashboardStats(dashboard);
+
+                const schools = await apiCall('/api/super-admin/schools?limit=50');
+                updateSchoolsTable(schools);
+
+                const health = await apiCall('/api/super-admin/system/health');
+                updateSystemHealth(health);
+
+                loadGrowthChart();
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        function updateDashboardStats(data) {
+            document.getElementById('totalSchools').textContent = data.total_schools || 0;
+            document.getElementById('totalUsers').textContent = data.total_users || 0;
+            document.getElementById('totalRevenue').textContent = `$${(data.total_revenue || 0).toLocaleString()}`;
+            document.getElementById('newSchools30d').textContent = data.new_schools_30d || 0;
+            document.getElementById('activeSchoolsCount').textContent = data.active_schools || 0;
+            document.getElementById('pendingApprovalsCount').textContent = data.pending_schools || 0;
+        }
+
+        function updateSchoolsTable(schools) {
+            const tbody = document.getElementById('schoolsTable');
+            tbody.innerHTML = '';
+
+            schools.forEach(school => {
+                const row = document.createElement('tr');
+                const statusClass = school.is_active && school.is_approved ? 'status-active' : 
+                                  !school.is_approved ? 'status-pending' : 'status-inactive';
+                const statusText = school.is_active && school.is_approved ? 'Active' : 
+                                 !school.is_approved ? 'Pending' : 'Inactive';
+
+                row.innerHTML = `
+                    <td>${school.name}</td>
+                    <td>${school.email}</td>
+                    <td>0</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        ${!school.is_approved ? `<button class="btn btn-success btn-sm btn-action" onclick="approveSchool(${school.id})">Approve</button>` : ''}
+                        <button class="btn btn-info btn-sm btn-action" onclick="viewSchool(${school.id})">View</button>
+                        <button class="btn btn-warning btn-sm btn-action" onclick="editSchool(${school.id})">Edit</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateSystemHealth(health) {
+            const dbStatus = document.getElementById('dbStatus');
+            dbStatus.textContent = health.database_status === 'healthy' ? 'Healthy' : 'Error';
+            dbStatus.className = health.database_status === 'healthy' ? 'badge bg-success' : 'badge bg-danger';
+        }
+
+        function loadGrowthChart() {
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'New Schools',
+                        data: [5, 8, 12, 15, 18, 22],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Actions
+        async function approveSchool(schoolId) {
+            try {
+                await apiCall(`/api/super-admin/schools/${schoolId}/approve`, { method: 'PUT' });
+                loadDashboard(); // Reload data
+                alert('School approved successfully!');
+            } catch (error) {
+                alert('Error approving school');
+            }
+        }
+
+        function viewSchool(schoolId) {
+            window.open(`/school-details.html?id=${schoolId}`, '_blank');
+        }
+
+        function editSchool(schoolId) {
+            window.location.href = `/edit-school.html?id=${schoolId}`;
+        }
+
+        function filterSchools() {
+            const filter = document.getElementById('schoolFilter').value;
+            loadSchoolsWithFilter(filter);
+        }
+
+        async function loadSchoolsWithFilter(status) {
+            try {
+                const url = status ? `/api/super-admin/schools?status=${status}&limit=50` : '/api/super-admin/schools?limit=50';
+                const schools = await apiCall(url);
+                updateSchoolsTable(schools);
+            } catch (error) {
+                console.error('Error filtering schools:', error);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            window.location.href = '/login.html';
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboard();
+        });
+    </script>
+</body>
+</html>
