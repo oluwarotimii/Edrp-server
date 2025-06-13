@@ -353,15 +353,18 @@ class PermissionService:
                                 role.permissions.append(permission)
         
         db.commit()
+from functools import wraps
 
 def require_permission(permission_name: str):
     """Decorator to require specific permission for endpoint access"""
     def decorator(func):
         @wraps(func)
-        def wrapper(*args, **kwargs):
-            # This is a placeholder - actual implementation would depend on
-            # how current_user is passed to the function
-            # In FastAPI, this would typically be handled by dependencies
-            pass
+        async def wrapper(*args, current_user: User = Depends(get_current_user), **kwargs):
+            # Check that the user has the required permission
+            if not current_user.has_permission(permission_name):
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                    detail="You do not have permission to perform this action")
+            # Call the function if the user has the required permission
+            return await func(*args, current_user=current_user, **kwargs)
         return wrapper
     return decorator
