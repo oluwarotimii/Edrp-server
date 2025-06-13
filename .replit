@@ -17,7 +17,7 @@ task = "workflow.run"
 args = "Education ERP Server"
 
 [[workflows.workflow]]
-name = "Education ERP Server"
+name = "Education EDRP Server"
 author = "agent"
 
 [[workflows.workflow.tasks]]
