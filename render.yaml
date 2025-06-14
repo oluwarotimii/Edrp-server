@@ -9,7 +9,7 @@ services:
     name: schoolmaster-api
     env: python
     pythonVersion: 3.11
-    buildCommand: poetry install
+    buildCommand: poetry install && poetry run alembic upgrade head
     startCommand: poetry run uvicorn main:app --host 0.0.0.0 --port $PORT
     env:
       DATABASE_URL: postgres://{{POSTGRES_USER}}:{{POSTGRES_PASSWORD}}@{{POSTGRES_HOST}}:{{POSTGRES_PORT}}/{{POSTGRES_DB}}
