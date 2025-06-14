@@ -86,7 +86,7 @@ async def register_school(
             user_id=db_admin.id,
             role_id=admin_role.id,
             school_id=db_admin.school_id,
-            assigned_by=1,  # System user ID
+            assigned_by=None,  # No assigned_by for initial registration
             assigned_at=datetime.utcnow()
         )
         db.add(user_role_association)
