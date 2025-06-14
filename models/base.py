@@ -1,8 +1,8 @@
 from sqlalchemy import Column, Integer, DateTime, Boolean
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 
-Base = declarative_base()
+# Import the centralized Base from database.py
+from database import Base
 
 class BaseModel(Base):
     """Base model with common fields for all tables"""
