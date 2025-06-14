@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Date, JSON
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 from .base import TenantBaseModel
 from typing import List, TYPE_CHECKING
 
@@ -31,12 +31,12 @@ class Teacher(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    school: "School" = relationship("School", back_populates="teachers")
-    user: "User" = relationship("User")
-    department: "Department" = relationship("Department", foreign_keys=[department_id], back_populates="teachers")
-    assignments: "List['TeacherAssignment']" = relationship("TeacherAssignment", back_populates="teacher")
-    attendance_records: "List['TeacherAttendance']" = relationship("TeacherAttendance", back_populates="teacher")
-    timetable_entries: "List['TimetableEntry']" = relationship("TimetableEntry", back_populates="teacher")
+    school: Mapped["School"] = relationship("School", back_populates="teachers")
+    user: Mapped["User"] = relationship("User")
+    department: Mapped["Department"] = relationship("Department", foreign_keys=[department_id], back_populates="teachers")
+    assignments: Mapped[List["TeacherAssignment"]] = relationship("TeacherAssignment", back_populates="teacher")
+    attendance_records: Mapped[List["TeacherAttendance"]] = relationship("TeacherAttendance", back_populates="teacher")
+    timetable_entries: Mapped[List["TimetableEntry"]] = relationship("TimetableEntry", back_populates="teacher")
 
 class TeacherAssignment(TenantBaseModel):
     __tablename__ = "teacher_assignments"
@@ -49,7 +49,7 @@ class TeacherAssignment(TenantBaseModel):
     assignment_date = Column(Date)
     
     # Relationships
-    teacher: "Teacher" = relationship("Teacher", back_populates="assignments")
-    subject: "Subject" = relationship("Subject")
-    class_assigned: "Class" = relationship("Class")
-    academic_session: "AcademicSession" = relationship("AcademicSession")
+    teacher: Mapped["Teacher"] = relationship("Teacher", back_populates="assignments")
+    subject: Mapped["Subject"] = relationship("Subject")
+    class_assigned: Mapped["Class"] = relationship("Class")
+    academic_session: Mapped["AcademicSession"] = relationship("AcademicSession")

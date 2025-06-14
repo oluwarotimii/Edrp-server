@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, JSON
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 from .base import TenantBaseModel
 from typing import List, TYPE_CHECKING
 
@@ -24,9 +24,9 @@ class Message(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    sender: "'User'" = relationship("User", foreign_keys=[sender_id], back_populates="sent_messages")
-    recipient: "'User'" = relationship("User", foreign_keys=[recipient_id], back_populates="received_messages")
-    replies: "List['Message']" = relationship("Message", remote_side=[parent_message_id])
+    sender: Mapped["User"] = relationship("User", foreign_keys=[sender_id], back_populates="sent_messages")
+    recipient: Mapped["User"] = relationship("User", foreign_keys=[recipient_id], back_populates="received_messages")
+    replies: Mapped[List["Message"]] = relationship("Message", remote_side=[parent_message_id])
 
 class BehaviorReport(TenantBaseModel):
     __tablename__ = "behavior_reports"
@@ -50,8 +50,8 @@ class BehaviorReport(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    student: "'Student'" = relationship("Student", back_populates="behavior_reports")
-    reporter: "'User'" = relationship("User")
+    student: Mapped["Student"] = relationship("Student", back_populates="behavior_reports")
+    reporter: Mapped["User"] = relationship("User")
 
 class Happening(TenantBaseModel):
     __tablename__ = "happenings"
@@ -70,4 +70,4 @@ class Happening(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    publisher: "'User'" = relationship("User")
+    publisher: Mapped["User"] = relationship("User")

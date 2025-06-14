@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Date
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 from .base import TenantBaseModel
 from typing import List, TYPE_CHECKING
 
@@ -20,10 +20,10 @@ class Department(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    school: "School" = relationship("School", back_populates="departments")
-    head_teacher: "Teacher" = relationship("Teacher", foreign_keys=[head_teacher_id], post_update=True)
-    teachers: "List['Teacher']" = relationship("Teacher", foreign_keys="Teacher.department_id", back_populates="department")
-    subjects: "List['Subject']" = relationship("Subject", back_populates="department")
+    school: Mapped["School"] = relationship("School", back_populates="departments")
+    head_teacher: Mapped["Teacher"] = relationship("Teacher", foreign_keys=[head_teacher_id], post_update=True)
+    teachers: Mapped[List["Teacher"]] = relationship("Teacher", foreign_keys="Teacher.department_id", back_populates="department")
+    subjects: Mapped[List["Subject"]] = relationship("Subject", back_populates="department")
 
 class Class(TenantBaseModel):
     __tablename__ = "classes"
@@ -38,10 +38,10 @@ class Class(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    class_teacher: "Teacher" = relationship("Teacher", foreign_keys=[class_teacher_id], post_update=True)
-    students: "List['Student']" = relationship("Student", back_populates="class_assigned")
-    subjects: "List['Subject']" = relationship("Subject", secondary="class_subjects", back_populates="classes")
-    timetable_entries: "List['TimetableEntry']" = relationship("TimetableEntry", back_populates="class_assigned")
+    class_teacher: Mapped["Teacher"] = relationship("Teacher", foreign_keys=[class_teacher_id], post_update=True)
+    students: Mapped[List["Student"]] = relationship("Student", back_populates="class_assigned")
+    subjects: Mapped[List["Subject"]] = relationship("Subject", secondary="class_subjects", back_populates="classes")
+    timetable_entries: Mapped[List["TimetableEntry"]] = relationship("TimetableEntry", back_populates="class_assigned")
 
 class Subject(TenantBaseModel):
     __tablename__ = "subjects"
@@ -56,9 +56,9 @@ class Subject(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    department: "Department" = relationship("Department", back_populates="subjects")
-    classes: "List['Class']" = relationship("Class", secondary="class_subjects", back_populates="subjects")
-    assessments: "List['Assessment']" = relationship("Assessment", back_populates="subject")
+    department: Mapped["Department"] = relationship("Department", back_populates="subjects")
+    classes: Mapped[List["Class"]] = relationship("Class", secondary="class_subjects", back_populates="subjects")
+    assessments: Mapped[List["Assessment"]] = relationship("Assessment", back_populates="subject")
 
 # Association table for many-to-many relationship between classes and subjects
 from sqlalchemy import Table
@@ -81,7 +81,7 @@ class AcademicSession(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    terms: "List['Term']" = relationship("Term", back_populates="academic_session")
+    terms: Mapped[List["Term"]] = relationship("Term", back_populates="academic_session")
 
 class Term(TenantBaseModel):
     __tablename__ = "terms"
@@ -95,5 +95,5 @@ class Term(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    academic_session: "AcademicSession" = relationship("AcademicSession", back_populates="terms")
-    assessments: "List['Assessment']" = relationship("Assessment", back_populates="term")
+    academic_session: Mapped["AcademicSession"] = relationship("AcademicSession", back_populates="terms")
+    assessments: Mapped[List["Assessment"]] = relationship("Assessment", back_populates="term")

@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Date, Time, Float
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 from .base import TenantBaseModel
 from typing import TYPE_CHECKING
 
@@ -41,10 +41,10 @@ class AttendanceRecord(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    student: "'Student'" = relationship("Student", back_populates="attendance_records")
-    marker: "'User'" = relationship("User")
-    period: "'Period'" = relationship("Period", back_populates="attendance_records")
-    subject: "'Subject'" = relationship("Subject")
+    student: Mapped["Student"] = relationship("Student", back_populates="attendance_records")
+    marker: Mapped["User"] = relationship("User")
+    period: Mapped["Period"] = relationship("Period", back_populates="attendance_records")
+    subject: Mapped["Subject"] = relationship("Subject")
 
 class TeacherAttendance(TenantBaseModel):
     __tablename__ = "teacher_attendance"
@@ -65,4 +65,4 @@ class TeacherAttendance(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    teacher: "'Teacher'" = relationship("Teacher", back_populates="attendance_records")
+    teacher: Mapped["Teacher"] = relationship("Teacher", back_populates="attendance_records")

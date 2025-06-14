@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, JSON, Date
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 from .base import TenantBaseModel
 from typing import List, TYPE_CHECKING
 
@@ -39,16 +39,16 @@ class Student(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    school: "School" = relationship("School", back_populates="students")
-    user: "User" = relationship("User")
-    class_assigned: "Class" = relationship("Class", back_populates="students")
-    parents: "List['StudentParent']" = relationship("StudentParent", back_populates="student")
-    custom_fields: "List['StudentCustomField']" = relationship("StudentCustomField", back_populates="student")
-    subject_enrollments: "List['StudentSubjectEnrollment']" = relationship("StudentSubjectEnrollment", back_populates="student")
-    fees: "List['StudentFee']" = relationship("StudentFee", back_populates="student")
-    attendance_records: "List['AttendanceRecord']" = relationship("AttendanceRecord", back_populates="student")
-    scores: "List['Score']" = relationship("Score", back_populates="student")
-    behavior_reports: "List['BehaviorReport']" = relationship("BehaviorReport", back_populates="student")
+    school: Mapped["School"] = relationship("School", back_populates="students")
+    user: Mapped["User"] = relationship("User")
+    class_assigned: Mapped["Class"] = relationship("Class", back_populates="students")
+    parents: Mapped[List["StudentParent"]] = relationship("StudentParent", back_populates="student")
+    custom_fields: Mapped[List["StudentCustomField"]] = relationship("StudentCustomField", back_populates="student")
+    subject_enrollments: Mapped[List["StudentSubjectEnrollment"]] = relationship("StudentSubjectEnrollment", back_populates="student")
+    fees: Mapped[List["StudentFee"]] = relationship("StudentFee", back_populates="student")
+    attendance_records: Mapped[List["AttendanceRecord"]] = relationship("AttendanceRecord", back_populates="student")
+    scores: Mapped[List["Score"]] = relationship("Score", back_populates="student")
+    behavior_reports: Mapped[List["BehaviorReport"]] = relationship("BehaviorReport", back_populates="student")
 
 class StudentParent(TenantBaseModel):
     __tablename__ = "student_parents"
@@ -60,8 +60,8 @@ class StudentParent(TenantBaseModel):
     can_pick_up = Column(Boolean, default=True)
     
     # Relationships
-    student: "Student" = relationship("Student", back_populates="parents")
-    parent: "User" = relationship("User")
+    student: Mapped["Student"] = relationship("Student", back_populates="parents")
+    parent: Mapped["User"] = relationship("User")
 
 class StudentCustomField(TenantBaseModel):
     __tablename__ = "student_custom_fields"
@@ -72,7 +72,7 @@ class StudentCustomField(TenantBaseModel):
     field_type = Column(String(20), default="text")  # text, number, date, boolean
     
     # Relationships
-    student: "Student" = relationship("Student", back_populates="custom_fields")
+    student: Mapped["Student"] = relationship("Student", back_populates="custom_fields")
 
 class StudentSubjectEnrollment(TenantBaseModel):
     __tablename__ = "student_subject_enrollments"
@@ -84,6 +84,6 @@ class StudentSubjectEnrollment(TenantBaseModel):
     is_core_subject = Column(Boolean, default=False)
     
     # Relationships
-    student: "Student" = relationship("Student", back_populates="subject_enrollments")
-    subject: "Subject" = relationship("Subject")
-    academic_session: "AcademicSession" = relationship("AcademicSession")
+    student: Mapped["Student"] = relationship("Student", back_populates="subject_enrollments")
+    subject: Mapped["Subject"] = relationship("Subject")
+    academic_session: Mapped["AcademicSession"] = relationship("AcademicSession")

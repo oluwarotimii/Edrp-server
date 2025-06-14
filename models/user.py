@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Table
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 from .base import BaseModel, TenantBaseModel
 from typing import List, TYPE_CHECKING
 
@@ -48,10 +48,10 @@ class User(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    school: "School" = relationship("School", back_populates="users")
-    roles: "List['Role']" = relationship("Role", secondary=user_roles, back_populates="users")
-    sent_messages: "List['Message']" = relationship("Message", foreign_keys="Message.sender_id", back_populates="sender")
-    received_messages: "List['Message']" = relationship("Message", foreign_keys="Message.recipient_id", back_populates="recipient")
+    school: Mapped["School"] = relationship("School", back_populates="users")
+    roles: Mapped[List["Role"]] = relationship("Role", secondary=user_roles, back_populates="users")
+    sent_messages: Mapped[List["Message"]] = relationship("Message", foreign_keys="Message.sender_id", back_populates="sender")
+    received_messages: Mapped[List["Message"]] = relationship("Message", foreign_keys="Message.recipient_id", back_populates="recipient")
 
 class Role(TenantBaseModel):
     __tablename__ = "roles"
@@ -61,8 +61,8 @@ class Role(TenantBaseModel):
     is_system_role = Column(Boolean, default=False)
     
     # Relationships
-    users: "List['User']" = relationship("User", secondary=user_roles, back_populates="roles")
-    permissions: "List['Permission']" = relationship("Permission", secondary=role_permissions, back_populates="roles")
+    users: Mapped[List["User"]] = relationship("User", secondary=user_roles, back_populates="roles")
+    permissions: Mapped[List["Permission"]] = relationship("Permission", secondary=role_permissions, back_populates="roles")
 
 class Permission(BaseModel):
     __tablename__ = "permissions"
@@ -74,7 +74,7 @@ class Permission(BaseModel):
     resource = Column(String(50))
     
     # Relationships
-    roles: "List['Role']" = relationship("Role", secondary=role_permissions, back_populates="permissions")
+    roles: Mapped[List["Role"]] = relationship("Role", secondary=role_permissions, back_populates="permissions")
 
 class UserRole(TenantBaseModel):
     __tablename__ = "user_roles_history"

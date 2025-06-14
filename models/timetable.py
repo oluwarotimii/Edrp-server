@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Time
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 from .base import TenantBaseModel
 from typing import List, TYPE_CHECKING
 from datetime import time
@@ -21,8 +21,8 @@ class Period(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    timetable_entries: "List['TimetableEntry']" = relationship("TimetableEntry", back_populates="period")
-    attendance_records: "List['AttendanceRecord']" = relationship("AttendanceRecord", back_populates="period")
+    timetable_entries: Mapped[List["TimetableEntry"]] = relationship("TimetableEntry", back_populates="period")
+    attendance_records: Mapped[List["AttendanceRecord"]] = relationship("AttendanceRecord", back_populates="period")
 
 class TimetableEntry(TenantBaseModel):
     __tablename__ = "timetable_entries"
@@ -39,8 +39,8 @@ class TimetableEntry(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    class_assigned: "Class" = relationship("Class", back_populates="timetable_entries")
-    subject: "Subject" = relationship("Subject")
-    teacher: "Teacher" = relationship("Teacher", back_populates="timetable_entries")
-    period: "Period" = relationship("Period", back_populates="timetable_entries")
-    academic_session: "AcademicSession" = relationship("AcademicSession")
+    class_assigned: Mapped["Class"] = relationship("Class", back_populates="timetable_entries")
+    subject: Mapped["Subject"] = relationship("Subject")
+    teacher: Mapped["Teacher"] = relationship("Teacher", back_populates="timetable_entries")
+    period: Mapped["Period"] = relationship("Period", back_populates="timetable_entries")
+    academic_session: Mapped["AcademicSession"] = relationship("AcademicSession")

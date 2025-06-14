@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Float, Date, JSON
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 from .base import TenantBaseModel
 from typing import List, TYPE_CHECKING
 
@@ -20,7 +20,7 @@ class FeeType(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    student_fees: "List['StudentFee']" = relationship("StudentFee", back_populates="fee_type")
+    student_fees: Mapped[List["StudentFee"]] = relationship("StudentFee", back_populates="fee_type")
 
 class StudentFee(TenantBaseModel):
     __tablename__ = "student_fees"
@@ -38,9 +38,9 @@ class StudentFee(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    student: "'Student'" = relationship("Student", back_populates="fees")
-    fee_type: "'FeeType'" = relationship("FeeType", back_populates="student_fees")
-    payments: "List['Payment']" = relationship("Payment", back_populates="student_fee")
+    student: Mapped["Student"] = relationship("Student", back_populates="fees")
+    fee_type: Mapped["FeeType"] = relationship("FeeType", back_populates="student_fees")
+    payments: Mapped[List["Payment"]] = relationship("Payment", back_populates="student_fee")
 
 class Payment(TenantBaseModel):
     __tablename__ = "payments"
@@ -60,5 +60,5 @@ class Payment(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    student_fee: "'StudentFee'" = relationship("StudentFee", back_populates="payments")
-    recorder: "'User'" = relationship("User")
+    student_fee: Mapped["StudentFee"] = relationship("StudentFee", back_populates="payments")
+    recorder: Mapped["User"] = relationship("User")
