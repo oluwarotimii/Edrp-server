@@ -17,8 +17,7 @@ from utils.exceptions import setup_exception_handlers
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create database tables
-    Base.metadata.create_all(bind=engine)
+    # We are now using Alembic for migrations, so we don't need to create tables here.
     yield
 
 
@@ -65,6 +64,10 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/")
 async def read_root():
     return FileResponse("static/index.html")
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse("static/favicon.ico")
 
 @app.get("/health")
 async def health_check():
