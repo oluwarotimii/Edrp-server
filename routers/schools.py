@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 import random
 import string
+from datetime import datetime
 
 from database import get_db
 from models.school import School, SchoolSubscription
