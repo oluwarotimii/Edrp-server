@@ -88,10 +88,23 @@ async def register_school(
         return db_school
     except Exception as e:
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred during school registration: {str(e)}",
-        )
+        error_msg = str(e)
+        # Add more specific error handling
+        if "UNIQUE constraint failed" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Duplicate entry found. Please check your inputs and try again."
+            )
+        elif "FOREIGN KEY constraint failed" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid reference data. Please ensure all required data exists in the database."
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"An error occurred during school registration: {error_msg}"
+            )
 
 @router.get("/schools", response_model=List[SchoolSchema])
 async def get_schools(
