@@ -1,5 +1,7 @@
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+import traceback
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, Response
@@ -38,6 +40,18 @@ app.add_middleware(
 )
 
 # Setup exception handlers
+def setup_exception_handlers(app: FastAPI):
+    @app.exception_handler(Exception)
+    async def exception_handler(request: Request, exc: Exception):
+        error_trace = traceback.format_exc()
+        return JSONResponse(
+            status_code=500,
+            content={
+                "detail": str(exc),
+                "traceback": error_trace
+            }
+        )
+
 setup_exception_handlers(app)
 
 # Include routers

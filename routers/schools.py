@@ -86,11 +86,11 @@ async def register_school(
         db.refresh(db_school)
         
         return db_school
-    except Exception:
+    except Exception as e:
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred during school registration.",
+            detail=f"An error occurred during school registration: {str(e)}",
         )
 
 @router.get("/schools", response_model=List[SchoolSchema])
