@@ -1,6 +1,11 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, Dict, Any
 from datetime import datetime
+from enum import Enum
+
+class SchoolType(str, Enum):
+    DAY = "Day"
+    BOARDING = "Boarding"
 
 class SchoolBase(BaseModel):
     name: str
@@ -9,11 +14,13 @@ class SchoolBase(BaseModel):
     email: EmailStr
     website: Optional[str] = None
     principal_name: Optional[str] = None
-    is_boarding_school: bool = False
-    school_type: Optional[str] = None
+    school_type: SchoolType = SchoolType.DAY
 
 class SchoolCreate(SchoolBase):
-    pass
+    admin_first_name: str = Field(..., min_length=2)
+    admin_last_name: str = Field(..., min_length=2)
+    admin_email: EmailStr
+    admin_password: str = Field(..., min_length=8)
 
 class SchoolUpdate(BaseModel):
     name: Optional[str] = None
@@ -21,8 +28,7 @@ class SchoolUpdate(BaseModel):
     phone: Optional[str] = None
     website: Optional[str] = None
     principal_name: Optional[str] = None
-    is_boarding_school: Optional[bool] = None
-    school_type: Optional[str] = None
+    school_type: Optional[SchoolType] = None
     settings: Optional[Dict[str, Any]] = None
 
 class School(SchoolBase):

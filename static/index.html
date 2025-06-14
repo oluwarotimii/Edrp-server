@@ -678,47 +678,62 @@
                                             <input type="text" class="form-control" id="schoolName" required>
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">School Email</label>
-                                            <input type="email" class="form-control" id="schoolEmail" required>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Principal Name</label>
-                                            <input type="text" class="form-control" id="principalName" required>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Phone Number</label>
-                                            <input type="tel" class="form-control" id="schoolPhone" required>
-                                        </div>
+                                    <div class="mb-3">
+                                        <label for="schoolName" class="form-label">School Name</label>
+                                        <input type="text" class="form-control" id="schoolName" required>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label">School Address</label>
-                                        <textarea class="form-control" id="schoolAddress" rows="3" required></textarea>
+                                        <label for="schoolEmail" class="form-label">School Email</label>
+                                        <input type="email" class="form-control" id="schoolEmail" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="principalName" class="form-label">Principal's Name</label>
+                                        <input type="text" class="form-control" id="principalName">
                                     </div>
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">School Type</label>
-                                            <select class="form-control" id="schoolType" required>
-                                                <option value="">Select Type</option>
-                                                <option value="primary">Primary School</option>
-                                                <option value="secondary">Secondary School</option>
-                                                <option value="mixed">Mixed (Primary & Secondary)</option>
-                                            </select>
+                                            <label for="schoolPhone" class="form-label">Phone Number</label>
+                                            <input type="tel" class="form-control" id="schoolPhone">
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">Boarding School?</label>
-                                            <select class="form-control" id="isBoardingSchool">
-                                                <option value="false">Day School</option>
-                                                <option value="true">Boarding School</option>
+                                            <label for="schoolType" class="form-label">School Type</label>
+                                            <select class="form-select" id="schoolType">
+                                                <option value="Day">Day School</option>
+                                                <option value="Boarding">Boarding School</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label">Website (Optional)</label>
+                                        <label for="schoolAddress" class="form-label">Address</label>
+                                        <textarea class="form-control" id="schoolAddress" rows="3"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="schoolWebsite" class="form-label">Website (Optional)</label>
                                         <input type="url" class="form-control" id="schoolWebsite">
                                     </div>
-                                    
+
+                                    <hr>
+
+                                    <h5 class="mb-3">Administrator Details</h5>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="adminFirstName" class="form-label">First Name</label>
+                                            <input type="text" class="form-control" id="adminFirstName" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="adminLastName" class="form-label">Last Name</label>
+                                            <input type="text" class="form-control" id="adminLastName" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="adminEmail" class="form-label">Admin Email</label>
+                                        <input type="email" class="form-control" id="adminEmail" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="adminPassword" class="form-label">Password</label>
+                                        <input type="password" class="form-control" id="adminPassword" required minlength="8">
+                                    </div>
+
                                     <div class="d-flex gap-2">
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-save"></i> Register School
@@ -1348,8 +1363,11 @@
                 phone: document.getElementById('schoolPhone').value,
                 address: document.getElementById('schoolAddress').value,
                 school_type: document.getElementById('schoolType').value,
-                is_boarding_school: document.getElementById('isBoardingSchool').value === 'true',
-                website: document.getElementById('schoolWebsite').value || null
+                website: document.getElementById('schoolWebsite').value || null,
+                admin_first_name: document.getElementById('adminFirstName').value,
+                admin_last_name: document.getElementById('adminLastName').value,
+                admin_email: document.getElementById('adminEmail').value,
+                admin_password: document.getElementById('adminPassword').value
             };
             
             registerSchool(schoolData);

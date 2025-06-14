@@ -6,9 +6,10 @@ import string
 
 from database import get_db
 from models.school import School, SchoolSubscription
-from models.user import User
+from models.user import User, Role, UserRole
 from schemas.school import School as SchoolSchema, SchoolCreate, SchoolUpdate, JoinSchoolRequest
 from utils.dependencies import get_current_user, require_permission
+from utils.security import get_password_hash
 from utils.exceptions import NotFoundException, ValidationException
 
 router = APIRouter()
@@ -22,35 +23,75 @@ async def register_school(
     school: SchoolCreate,
     db: Session = Depends(get_db)
 ):
-    """Register a new school"""
-    # Check if email already exists
+    """Register a new school and its first admin user"""
+    # Check if school email already exists
     existing_school = db.query(School).filter(School.email == school.email).first()
     if existing_school:
         raise ValidationException("A school with this email already exists")
+
+    # Check if admin email already exists
+    existing_user = db.query(User).filter(User.email == school.admin_email).first()
+    if existing_user:
+        raise ValidationException("A user with this email already exists")
     
-    # Generate unique join code
-    join_code = generate_join_code()
-    while db.query(School).filter(School.join_code == join_code).first():
+    # Get the Admin role
+    admin_role = db.query(Role).filter(Role.name == "Admin").first()
+    if not admin_role:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Admin role not found. Please seed the database with roles.",
+        )
+
+    # Use a transaction to ensure atomicity
+    try:
+        # Generate unique join code
         join_code = generate_join_code()
-    
-    db_school = School(
-        name=school.name,
-        address=school.address,
-        phone=school.phone,
-        email=school.email,
-        website=school.website,
-        principal_name=school.principal_name,
-        is_boarding_school=school.is_boarding_school,
-        school_type=school.school_type,
-        join_code=join_code,
-        is_approved=False  # Requires admin approval
-    )
-    
-    db.add(db_school)
-    db.commit()
-    db.refresh(db_school)
-    
-    return db_school
+        while db.query(School).filter(School.join_code == join_code).first():
+            join_code = generate_join_code()
+
+        # Create the school
+        db_school = School(
+            name=school.name,
+            address=school.address,
+            phone=school.phone,
+            email=school.email,
+            website=school.website,
+            principal_name=school.principal_name,
+            school_type=school.school_type.value,
+            join_code=join_code,
+            is_approved=False  # Requires platform admin approval
+        )
+        db.add(db_school)
+        db.flush()
+
+        # Create the admin user
+        hashed_password = get_password_hash(school.admin_password)
+        db_admin = User(
+            first_name=school.admin_first_name,
+            last_name=school.admin_last_name,
+            email=school.admin_email,
+            hashed_password=hashed_password,
+            school_id=db_school.id,
+            is_active=True,
+            is_approved=True
+        )
+        db.add(db_admin)
+        db.flush()
+
+        # Assign the Admin role to the user
+        user_role_association = UserRole(user_id=db_admin.id, role_id=admin_role.id)
+        db.add(user_role_association)
+
+        db.commit()
+        db.refresh(db_school)
+        
+        return db_school
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred during school registration.",
+        )
 
 @router.get("/schools", response_model=List[SchoolSchema])
 async def get_schools(

@@ -21,8 +21,7 @@ class School(BaseModel):
     principal_name = Column(String(255))
     join_code = Column(String(10), unique=True, nullable=False)
     logo_url = Column(String(500))
-    is_boarding_school = Column(Boolean, default=False)
-    school_type = Column(String(50))  # primary, secondary, mixed
+    school_type = Column(String(50), nullable=False, default='Day')  # e.g., 'Day' or 'Boarding'
     settings = Column(JSON, default={})
     is_approved = Column(Boolean, default=False)
     
