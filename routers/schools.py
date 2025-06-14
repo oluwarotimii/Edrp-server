@@ -81,7 +81,13 @@ async def register_school(
         db.flush()
 
         # Assign the Admin role to the user
-        user_role_association = UserRole(user_id=db_admin.id, role_id=admin_role.id)
+        user_role_association = UserRole(
+            user_id=db_admin.id,
+            role_id=admin_role.id,
+            school_id=db_admin.school_id,
+            assigned_by=1,  # System user ID
+            assigned_at=datetime.utcnow()
+        )
         db.add(user_role_association)
 
         db.commit()
