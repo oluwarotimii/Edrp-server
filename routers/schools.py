@@ -65,8 +65,10 @@ async def register_school(
         db.flush()
 
         # Create the admin user
+        username = f"{school.admin_first_name.lower()}.{school.admin_last_name.lower()}"[:30]  # Generate username
         hashed_password = get_password_hash(school.admin_password)
         db_admin = User(
+            username=username,
             first_name=school.admin_first_name,
             last_name=school.admin_last_name,
             email=school.admin_email,
