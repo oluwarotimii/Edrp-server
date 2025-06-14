@@ -1,6 +1,14 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Date, JSON
 from sqlalchemy.orm import relationship
 from .base import TenantBaseModel
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .user import User
+    from .school import School, Department
+    from .attendance import TeacherAttendance
+    from .timetable import TimetableEntry
+    from .academic import Subject, Class, AcademicSession
 
 class Teacher(TenantBaseModel):
     __tablename__ = "teachers"
@@ -23,12 +31,12 @@ class Teacher(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    school = relationship("School", back_populates="teachers")
-    user = relationship("User")
-    department = relationship("Department", foreign_keys=[department_id], back_populates="teachers")
-    assignments = relationship("TeacherAssignment", back_populates="teacher")
-    attendance_records = relationship("TeacherAttendance", back_populates="teacher")
-    timetable_entries = relationship("TimetableEntry", back_populates="teacher")
+    school: "School" = relationship("School", back_populates="teachers")
+    user: "User" = relationship("User")
+    department: "Department" = relationship("Department", foreign_keys=[department_id], back_populates="teachers")
+    assignments: "List['TeacherAssignment']" = relationship("TeacherAssignment", back_populates="teacher")
+    attendance_records: "List['TeacherAttendance']" = relationship("TeacherAttendance", back_populates="teacher")
+    timetable_entries: "List['TimetableEntry']" = relationship("TimetableEntry", back_populates="teacher")
 
 class TeacherAssignment(TenantBaseModel):
     __tablename__ = "teacher_assignments"
@@ -41,7 +49,7 @@ class TeacherAssignment(TenantBaseModel):
     assignment_date = Column(Date)
     
     # Relationships
-    teacher = relationship("Teacher", back_populates="assignments")
-    subject = relationship("Subject")
-    class_assigned = relationship("Class")
-    academic_session = relationship("AcademicSession")
+    teacher: "Teacher" = relationship("Teacher", back_populates="assignments")
+    subject: "Subject" = relationship("Subject")
+    class_assigned: "Class" = relationship("Class")
+    academic_session: "AcademicSession" = relationship("AcademicSession")

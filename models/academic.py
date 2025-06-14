@@ -1,6 +1,14 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Date
 from sqlalchemy.orm import relationship
 from .base import TenantBaseModel
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .school import School
+    from .teacher import Teacher
+    from .student import Student
+    from .timetable import TimetableEntry
+    from .assessment import Assessment
 
 class Department(TenantBaseModel):
     __tablename__ = "departments"
@@ -12,10 +20,10 @@ class Department(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    school = relationship("School", back_populates="departments")
-    head_teacher = relationship("Teacher", foreign_keys=[head_teacher_id], post_update=True)
-    teachers = relationship("Teacher", foreign_keys="Teacher.department_id", back_populates="department")
-    subjects = relationship("Subject", back_populates="department")
+    school: "School" = relationship("School", back_populates="departments")
+    head_teacher: "Teacher" = relationship("Teacher", foreign_keys=[head_teacher_id], post_update=True)
+    teachers: "List['Teacher']" = relationship("Teacher", foreign_keys="Teacher.department_id", back_populates="department")
+    subjects: "List['Subject']" = relationship("Subject", back_populates="department")
 
 class Class(TenantBaseModel):
     __tablename__ = "classes"
@@ -30,10 +38,10 @@ class Class(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    class_teacher = relationship("Teacher", foreign_keys=[class_teacher_id], post_update=True)
-    students = relationship("Student", back_populates="class_assigned")
-    subjects = relationship("Subject", secondary="class_subjects", back_populates="classes")
-    timetable_entries = relationship("TimetableEntry", back_populates="class_assigned")
+    class_teacher: "Teacher" = relationship("Teacher", foreign_keys=[class_teacher_id], post_update=True)
+    students: "List['Student']" = relationship("Student", back_populates="class_assigned")
+    subjects: "List['Subject']" = relationship("Subject", secondary="class_subjects", back_populates="classes")
+    timetable_entries: "List['TimetableEntry']" = relationship("TimetableEntry", back_populates="class_assigned")
 
 class Subject(TenantBaseModel):
     __tablename__ = "subjects"
@@ -48,9 +56,9 @@ class Subject(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    department = relationship("Department", back_populates="subjects")
-    classes = relationship("Class", secondary="class_subjects", back_populates="subjects")
-    assessments = relationship("Assessment", back_populates="subject")
+    department: "Department" = relationship("Department", back_populates="subjects")
+    classes: "List['Class']" = relationship("Class", secondary="class_subjects", back_populates="subjects")
+    assessments: "List['Assessment']" = relationship("Assessment", back_populates="subject")
 
 # Association table for many-to-many relationship between classes and subjects
 from sqlalchemy import Table
@@ -73,7 +81,7 @@ class AcademicSession(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    terms = relationship("Term", back_populates="academic_session")
+    terms: "List['Term']" = relationship("Term", back_populates="academic_session")
 
 class Term(TenantBaseModel):
     __tablename__ = "terms"
@@ -87,5 +95,5 @@ class Term(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    academic_session = relationship("AcademicSession", back_populates="terms")
-    assessments = relationship("Assessment", back_populates="term")
+    academic_session: "AcademicSession" = relationship("AcademicSession", back_populates="terms")
+    assessments: "List['Assessment']" = relationship("Assessment", back_populates="term")

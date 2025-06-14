@@ -1,6 +1,13 @@
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from .base import BaseModel
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .user import User
+    from .student import Student
+    from .teacher import Teacher
+    from .academic import Department
 
 class School(BaseModel):
     __tablename__ = "schools"
@@ -19,11 +26,11 @@ class School(BaseModel):
     is_approved = Column(Boolean, default=False)
     
     # Relationships
-    users = relationship("User", back_populates="school")
-    students = relationship("Student", back_populates="school")
-    teachers = relationship("Teacher", back_populates="school")
-    departments = relationship("Department", back_populates="school")
-    subscription = relationship("SchoolSubscription", back_populates="school", uselist=False)
+    users: "List['User']" = relationship("User", back_populates="school")
+    students: "List['Student']" = relationship("Student", back_populates="school")
+    teachers: "List['Teacher']" = relationship("Teacher", back_populates="school")
+    departments: "List['Department']" = relationship("Department", back_populates="school")
+    subscription: "'SchoolSubscription'" = relationship("SchoolSubscription", back_populates="school", uselist=False)
 
 class SchoolSubscription(BaseModel):
     __tablename__ = "school_subscriptions"
@@ -38,4 +45,4 @@ class SchoolSubscription(BaseModel):
     is_trial = Column(Boolean, default=False)
     
     # Relationships
-    school = relationship("School", back_populates="subscription")
+    school: "'School'" = relationship("School", back_populates="subscription")

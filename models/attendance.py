@@ -1,6 +1,14 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Date, Time, Float
 from sqlalchemy.orm import relationship
 from .base import TenantBaseModel
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .student import Student
+    from .user import User
+    from .timetable import Period
+    from .academic import Subject
+    from .teacher import Teacher
 
 class AuthenticLocation(TenantBaseModel):
     __tablename__ = "authentic_locations"
@@ -33,10 +41,10 @@ class AttendanceRecord(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    student = relationship("Student", back_populates="attendance_records")
-    marker = relationship("User")
-    period = relationship("Period")
-    subject = relationship("Subject")
+    student: "'Student'" = relationship("Student", back_populates="attendance_records")
+    marker: "'User'" = relationship("User")
+    period: "'Period'" = relationship("Period", back_populates="attendance_records")
+    subject: "'Subject'" = relationship("Subject")
 
 class TeacherAttendance(TenantBaseModel):
     __tablename__ = "teacher_attendance"
@@ -57,4 +65,4 @@ class TeacherAttendance(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    teacher = relationship("Teacher", back_populates="attendance_records")
+    teacher: "'Teacher'" = relationship("Teacher", back_populates="attendance_records")

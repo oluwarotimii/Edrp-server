@@ -1,6 +1,12 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Date, Float, JSON
 from sqlalchemy.orm import relationship
 from .base import TenantBaseModel
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .academic import Subject, Class, Term
+    from .student import Student
+    from .user import User
 
 class AssessmentScheme(TenantBaseModel):
     __tablename__ = "assessment_schemes"
@@ -12,7 +18,7 @@ class AssessmentScheme(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    components = relationship("AssessmentComponent", back_populates="scheme")
+    components: "List['AssessmentComponent']" = relationship("AssessmentComponent", back_populates="scheme")
 
 class AssessmentComponent(TenantBaseModel):
     __tablename__ = "assessment_components"
@@ -25,8 +31,8 @@ class AssessmentComponent(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    scheme = relationship("AssessmentScheme", back_populates="components")
-    assessments = relationship("Assessment", back_populates="component")
+    scheme: "'AssessmentScheme'" = relationship("AssessmentScheme", back_populates="components")
+    assessments: "List['Assessment']" = relationship("Assessment", back_populates="component")
 
 class GradingScale(TenantBaseModel):
     __tablename__ = "grading_scales"
@@ -57,11 +63,11 @@ class Assessment(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    subject = relationship("Subject", back_populates="assessments")
-    class_assigned = relationship("Class")
-    term = relationship("Term", back_populates="assessments")
-    component = relationship("AssessmentComponent", back_populates="assessments")
-    scores = relationship("Score", back_populates="assessment")
+    subject: "'Subject'" = relationship("Subject", back_populates="assessments")
+    class_assigned: "'Class'" = relationship("Class")
+    term: "'Term'" = relationship("Term", back_populates="assessments")
+    component: "'AssessmentComponent'" = relationship("AssessmentComponent", back_populates="assessments")
+    scores: "List['Score']" = relationship("Score", back_populates="assessment")
 
 class Score(TenantBaseModel):
     __tablename__ = "scores"
@@ -76,6 +82,6 @@ class Score(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    assessment = relationship("Assessment", back_populates="scores")
-    student = relationship("Student", back_populates="scores")
-    recorder = relationship("User")
+    assessment: "'Assessment'" = relationship("Assessment", back_populates="scores")
+    student: "'Student'" = relationship("Student", back_populates="scores")
+    recorder: "'User'" = relationship("User")

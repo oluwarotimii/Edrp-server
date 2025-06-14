@@ -1,6 +1,11 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Date, JSON
 from sqlalchemy.orm import relationship
 from .base import TenantBaseModel
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .academic import Class, AcademicSession
+    from .user import User
 
 class AdmissionApplication(TenantBaseModel):
     __tablename__ = "admission_applications"
@@ -45,10 +50,10 @@ class AdmissionApplication(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    documents = relationship("ApplicationDocument", back_populates="application")
-    class_applied = relationship("Class")
-    academic_session = relationship("AcademicSession")
-    reviewer = relationship("User")
+    documents: "List['ApplicationDocument']" = relationship("ApplicationDocument", back_populates="application")
+    class_applied: "'Class'" = relationship("Class")
+    academic_session: "'AcademicSession'" = relationship("AcademicSession")
+    reviewer: "'User'" = relationship("User")
 
 class ApplicationDocument(TenantBaseModel):
     __tablename__ = "application_documents"
@@ -67,5 +72,5 @@ class ApplicationDocument(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    application = relationship("AdmissionApplication", back_populates="documents")
-    verifier = relationship("User")
+    application: "'AdmissionApplication'" = relationship("AdmissionApplication", back_populates="documents")
+    verifier: "'User'" = relationship("User")

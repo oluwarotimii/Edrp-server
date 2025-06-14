@@ -1,6 +1,11 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Table
 from sqlalchemy.orm import relationship
 from .base import BaseModel, TenantBaseModel
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .school import School
+    from .communication import Message
 
 # Association table for many-to-many relationship between users and roles
 user_roles = Table(
@@ -43,10 +48,10 @@ class User(TenantBaseModel):
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
-    school = relationship("School", back_populates="users")
-    roles = relationship("Role", secondary=user_roles, back_populates="users")
-    sent_messages = relationship("Message", foreign_keys="Message.sender_id", back_populates="sender")
-    received_messages = relationship("Message", foreign_keys="Message.recipient_id", back_populates="recipient")
+    school: "School" = relationship("School", back_populates="users")
+    roles: "List['Role']" = relationship("Role", secondary=user_roles, back_populates="users")
+    sent_messages: "List['Message']" = relationship("Message", foreign_keys="Message.sender_id", back_populates="sender")
+    received_messages: "List['Message']" = relationship("Message", foreign_keys="Message.recipient_id", back_populates="recipient")
 
 class Role(TenantBaseModel):
     __tablename__ = "roles"
@@ -56,8 +61,8 @@ class Role(TenantBaseModel):
     is_system_role = Column(Boolean, default=False)
     
     # Relationships
-    users = relationship("User", secondary=user_roles, back_populates="roles")
-    permissions = relationship("Permission", secondary=role_permissions, back_populates="roles")
+    users: "List['User']" = relationship("User", secondary=user_roles, back_populates="roles")
+    permissions: "List['Permission']" = relationship("Permission", secondary=role_permissions, back_populates="roles")
 
 class Permission(BaseModel):
     __tablename__ = "permissions"
@@ -69,7 +74,7 @@ class Permission(BaseModel):
     resource = Column(String(50))
     
     # Relationships
-    roles = relationship("Role", secondary=role_permissions, back_populates="permissions")
+    roles: "List['Role']" = relationship("Role", secondary=role_permissions, back_populates="permissions")
 
 class UserRole(TenantBaseModel):
     __tablename__ = "user_roles_history"
