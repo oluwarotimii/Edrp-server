@@ -55,6 +55,8 @@ class User(TenantBaseModel):
     received_messages: Mapped[List["Message"]] = relationship("Message", foreign_keys="Message.recipient_id", back_populates="recipient")
 
 class Role(TenantBaseModel):
+    # Override school_id to be nullable for system-wide roles
+    school_id = Column(Integer, ForeignKey("schools.id"), nullable=True)
     __tablename__ = "roles"
     
     name = Column(String(100), nullable=False)
