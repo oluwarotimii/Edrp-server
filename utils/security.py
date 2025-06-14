@@ -6,18 +6,31 @@ from datetime import datetime, timedelta
 import re
 import ipaddress
 from fastapi import Request
-from passlib.context import CryptContext
-
-# Password Hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import hashlib
+import secrets
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifies a plain password against a hashed password."""
-    return pwd_context.verify(plain_password, hashed_password)
+    salt = hashed_password[:32]
+    key = hashed_password[32:]
+    new_key = hashlib.pbkdf2_hmac(
+        'sha256',
+        plain_password.encode('utf-8'),
+        salt.encode('utf-8'),
+        100000
+    )
+    return new_key.hex() == key
 
 def get_password_hash(password: str) -> str:
     """Hashes a plain password."""
-    return pwd_context.hash(password)
+    salt = secrets.token_hex(16)
+    key = hashlib.pbkdf2_hmac(
+        'sha256',
+        password.encode('utf-8'),
+        salt.encode('utf-8'),
+        100000
+    ).hex()
+    return f"{salt}{key}"
 
 
 class SecurityUtils:
