@@ -91,9 +91,15 @@ async def health_check():
     return {"status": "healthy", "message": "Education ERP System is running"}
 
 if __name__ == "__main__":
+    import uvicorn
     port = int(os.environ.get("PORT", 8000))
+    is_production = os.environ.get("ENVIRONMENT", "development").lower() == "production"
+    
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=port,
+        reload=not is_production,
+        workers=4 if is_production else 1,
+        log_level="info"
     )
