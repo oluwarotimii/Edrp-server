@@ -31,5 +31,8 @@ class Settings:
     
     # Location verification
     LOCATION_TOLERANCE_METERS: int = 100
+    
+    # Domain configuration
+    ROOT_DOMAIN: str = os.getenv("ROOT_DOMAIN", "localhost")
 
 settings = Settings()

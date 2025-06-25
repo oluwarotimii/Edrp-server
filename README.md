@@ -2,6 +2,15 @@
 
 A comprehensive multi-tenant Education Enterprise Resource Planning (ERP) system built with FastAPI and PostgreSQL. This system provides complete school management functionality including student information management, teacher administration, academic tracking, attendance monitoring, fee management, and much more.
 
+## 🏷️ Subdomain Support
+
+Each school gets a unique subdomain (e.g., `yourschool.edrp.app`) with the following features:
+- Custom subdomain selection during school registration
+- Automatic subdomain generation from school name
+- Subdomain availability checking
+- Support for custom domains (configured at the DNS level)
+- Subdomain-based routing for multi-tenancy
+
 ## 🚀 Features
 
 ### Core Modules

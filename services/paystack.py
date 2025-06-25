@@ -389,3 +389,108 @@ class PaystackService:
                     "status": "error",
                     "message": f"Unexpected error: {str(e)}"
                 }
+
+    async def create_plan(
+        self,
+        name: str,
+        amount: int,  # in kobo
+        interval: str = "monthly",  # or "yearly"
+        plan_code: Optional[str] = None,
+        description: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Create a subscription plan"""
+        payload = {
+            "name": name,
+            "amount": amount,
+            "interval": interval,
+            "currency": "NGN"
+        }
+        
+        if plan_code:
+            payload["plan_code"] = plan_code
+        if description:
+            payload["description"] = description
+        
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    f"{self.base_url}/plan",
+                    headers=self._get_headers(),
+                    json=payload,
+                    timeout=30.0
+                )
+                response.raise_for_status()
+                return response.json()
+            except Exception as e:
+                return {
+                    "status": False,
+                    "message": str(e)
+                }
+
+    async def create_subscription(
+        self,
+        customer_email: str,
+        plan_code: str,
+        authorization_code: str,
+        start_date: Optional[datetime] = None
+    ) -> Dict[str, Any]:
+        """Create a subscription"""
+        payload = {
+            "customer": customer_email,
+            "plan": plan_code,
+            "authorization": authorization_code
+        }
+        
+        if start_date:
+            payload["start_date"] = start_date.isoformat()
+        
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    f"{self.base_url}/subscription",
+                    headers=self._get_headers(),
+                    json=payload,
+                    timeout=30.0
+                )
+                response.raise_for_status()
+                return response.json()
+            except Exception as e:
+                return {
+                    "status": False,
+                    "message": str(e)
+                }
+    
+    async def get_subscription(self, subscription_code: str) -> Dict[str, Any]:
+        """Get subscription details"""
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(
+                    f"{self.base_url}/subscription/{subscription_code}",
+                    headers=self._get_headers(),
+                    timeout=30.0
+                )
+                response.raise_for_status()
+                return response.json()
+            except Exception as e:
+                return {
+                    "status": False,
+                    "message": str(e)
+                }
+    
+    async def disable_subscription(self, subscription_code: str) -> Dict[str, Any]:
+        """Disable a subscription"""
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    f"{self.base_url}/subscription/disable",
+                    headers=self._get_headers(),
+                    json={"code": subscription_code, "token": "dummy_token"},
+                    timeout=30.0
+                )
+                response.raise_for_status()
+                return response.json()
+            except Exception as e:
+                return {
+                    "status": False,
+                    "message": str(e)
+                }

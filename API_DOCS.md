@@ -3,12 +3,15 @@
 This document provides a comprehensive guide for integrating with the Education ERP backend API. It covers authentication, available endpoints, and data validation rules, including all recent schema-hardening updates.
 
 **Base URL for Local Development:** `http://127.0.0.1:8000`
+**Production Base URL:** `https://api.yourdomain.com`
 
 ## Table of Contents
 - [Authentication](#authentication)
+- [Subdomain Management](#subdomain-management)
 - [Data Validation and Enums](#data-validation-and-enums)
 - [API Endpoints](#api-endpoints)
   - [Schools](#schools)
+  - [Subdomains](#subdomains)
   - [Users](#users)
   - [Roles & Permissions](#roles--permissions)
   - [Super Admin](#super-admin)
@@ -34,6 +37,238 @@ curl -X POST http://127.0.0.1:8000/api/auth/login \
 curl -X POST http://127.0.0.1:8000/api/auth/refresh \
   -H "Authorization: Bearer <refresh_token>"
 ```
+
+---
+
+## Subdomain Management
+
+The Education ERP system supports multi-tenancy through a sophisticated subdomain system. Each school gets a unique subdomain that serves as their dedicated access point.
+
+### Subdomain Structure
+- Format: `{subdomain}.{root_domain}` (e.g., `yourschool.edrp.app`)
+- Root domain is configurable via `ROOT_DOMAIN` environment variable
+- Default root domain for local development: `localhost`
+
+### Subdomain Requirements
+- Must be 3-63 characters long
+- Can only contain lowercase letters, numbers, and hyphens
+- Cannot start or end with a hyphen
+- Must be unique across all schools
+- Cannot be a reserved subdomain (e.g., www, api, admin)
+- Must be URL-safe and DNS-compliant
+
+### Subdomain API Endpoints
+
+#### Check Subdomain Availability
+```bash
+GET /api/subdomains/check-availability?subdomain=myschool
+```
+
+**Response:**
+```json
+{
+  "available": true,
+  "suggestions": ["myschool1", "myschool2"],
+  "message": "Subdomain is available"
+}
+```
+
+#### Generate Subdomain Suggestions
+```bash
+GET /api/subdomains/suggest?name=My%20School&length=3
+```
+
+**Response:**
+```json
+{
+  "suggestions": ["myschool", "my-school", "myschool1"],
+  "base_name": "myschool"
+}
+```
+
+#### Register New School with Subdomain
+```bash
+POST /api/schools/register
+Content-Type: application/json
+
+{
+  "name": "My School",
+  "subdomain": "myschool",
+  "email": "admin@myschool.edu",
+  "phone": "+1234567890",
+  "address": "123 School St, City, Country",
+  "admin_email": "admin@myschool.edu",
+  "admin_password": "securepassword123"
+}
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "name": "My School",
+  "subdomain": "myschool",
+  "email": "admin@myschool.edu",
+  "status": "active",
+  "created_at": "2023-01-01T12:00:00Z"
+}
+```
+
+#### Update School Subdomain (Admin Only)
+```bash
+PATCH /api/schools/{school_id}/subdomain
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+  "subdomain": "newschoolname"
+}
+```
+
+### Custom Domain Support
+Schools can use their own domain by configuring a CNAME record:
+
+1. School admin adds custom domain in their settings
+2. System provides DNS verification token
+3. School adds CNAME record for their domain pointing to the root domain
+4. System verifies DNS configuration
+5. Once verified, the custom domain is activated
+
+### Subdomain Middleware
+- All API requests include the subdomain in the `X-Subdomain` header
+- The system validates the subdomain on each request
+- Invalid or non-existent subdomains return a 404 response
+- Subdomain information is available in the request state for route handlers
+
+### Environment Variables
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `ROOT_DOMAIN` | Root domain for subdomains | Yes | `localhost` |
+| `ALLOWED_HOSTS` | Comma-separated list of allowed hosts | Yes | `*` |
+| `ENABLE_SUBDOMAINS` | Enable subdomain routing | No | `true` |
+| `DEFAULT_SCHEME` | Default URL scheme | No | `https` |
+
+### Error Responses
+
+#### 400 Bad Request
+```json
+{
+  "detail": "Invalid subdomain format. Must be 3-63 characters, lowercase alphanumeric with hyphens"
+}
+```
+
+#### 403 Forbidden
+```json
+{
+  "detail": "Subdomain is reserved and cannot be used"
+}
+```
+
+#### 404 Not Found
+```json
+{
+  "detail": "Subdomain not found"
+}
+```
+
+#### 409 Conflict
+```json
+{
+  "detail": "Subdomain is already taken"
+}
+```
+
+#### 422 Unprocessable Entity
+```json
+{
+  "detail": [
+    {
+      "loc": ["body", "subdomain"],
+      "msg": "Subdomain contains invalid characters",
+      "type": "value_error"
+    }
+  ]
+}
+```
+
+### Security Considerations
+
+1. **Cookie Security**
+   - Cookies are scoped to the root domain to enable SSO across subdomains
+   - Set `Secure`, `HttpOnly`, and `SameSite=Lax` flags on all cookies
+   - Consider `__Host-` prefix for additional security
+
+2. **CORS Configuration**
+   - Configure CORS to allow requests from all subdomains
+   - Example: `Access-Control-Allow-Origin: *.yourdomain.com`
+   - Use `Vary: Origin` header to prevent cache poisoning
+
+3. **Rate Limiting**
+   - Implement rate limiting per subdomain to prevent abuse
+   - Consider stricter limits for subdomain registration endpoints
+
+4. **Subdomain Takeover Protection**
+   - Validate DNS records before allowing custom domain association
+   - Implement periodic verification of DNS configurations
+
+5. **Session Management**
+   - Ensure sessions are properly isolated between subdomains
+   - Implement session timeouts and rotation
+
+6. **Logging and Monitoring**
+   - Log all subdomain-related actions for audit purposes
+   - Monitor for unusual patterns in subdomain creation/usage
+
+7. **Data Isolation**
+   - Ensure database queries always include the subdomain filter
+   - Use row-level security where possible
+
+### Deployment Considerations
+
+1. **Wildcard SSL Certificate**
+   - Required to support dynamic subdomains
+   - Can be obtained from Let's Encrypt or other CAs
+   - Example: `*.yourdomain.com`
+
+2. **DNS Configuration**
+   - Add a wildcard DNS A record: `*.yourdomain.com` → your server IP
+   - For Railway deployment, use their provided domain or configure a custom domain
+
+3. **Railway Configuration**
+   ```bash
+   # Set environment variables in Railway
+   railway variables set ROOT_DOMAIN=yourdomain.com
+   railway variables set ALLOWED_HOSTS=yourdomain.com,*.yourdomain.com
+   railway variables set ENABLE_SUBDOMAINS=true
+   ```
+
+4. **Load Balancer/Reverse Proxy**
+   - Configure to pass through the `Host` header
+   - Example Nginx configuration:
+     ```nginx
+     server {
+         listen 80;
+         server_name ~^(?<subdomain>.+)\.yourdomain\.com$;
+         
+         location / {
+             proxy_pass http://localhost:8000;
+             proxy_set_header Host $host;
+             proxy_set_header X-Real-IP $remote_addr;
+             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+             proxy_set_header X-Forwarded-Proto $scheme;
+             proxy_set_header X-Subdomain $subdomain;
+         }
+     }
+     ```
+
+5. **Health Checks**
+   - Implement health check endpoints for monitoring
+   - Example: `GET /health` should return 200 OK
+
+6. **Backup Strategy**
+   - Regular database backups including the schools table
+   - Test restoration process periodically
 
 ---
 
@@ -129,7 +364,251 @@ curl -X GET http://127.0.0.1:8000/api/roles/1 \
   -H "Authorization: Bearer <access_token>"
 ```
 
-### Super Admin
+### Teachers
+
+Endpoints for managing teacher profiles, assignments, and status.
+
+#### Create Teacher
+*   **Endpoint:** `POST /teachers`
+*   **Permission:** `teachers:create`
+*   **Description:** Creates a new teacher record and links it to an existing user.
+*   **Body:** `TeacherCreate` schema.
+*   **cURL Example:**
+    ```bash
+    curl -X POST "http://localhost:8000/api/teachers" \
+    -H "Authorization: Bearer <your_token>" \
+    -H "Content-Type: application/json" \
+    -d '{
+          "user_id": 123,
+          "employee_id": "T-101",
+          "department_id": 1,
+          "hire_date": "2023-09-01",
+          "teaching_qualification": "M.Ed",
+          "specialization": "Physics",
+          "years_experience": 10,
+          "contract_type": "Full-Time"
+        }'
+    ```
+
+#### Get Teachers
+*   **Endpoint:** `GET /teachers`
+*   **Permission:** `teachers:view`
+*   **Description:** Retrieves a list of all teachers within the user's school. Supports filtering by department and status.
+*   **cURL Example:**
+    ```bash
+    curl -X GET "http://localhost:8000/api/teachers?department_id=1&status=Active" \
+    -H "Authorization: Bearer <your_token>"
+    ```
+
+#### Get Teacher by ID
+*   **Endpoint:** `GET /teachers/{teacher_id}`
+*   **Permission:** `teachers:view` (Note: Teachers can always view their own profile without this permission).
+*   **Description:** Retrieves the profile of a specific teacher.
+*   **cURL Example:**
+    ```bash
+    curl -X GET "http://localhost:8000/api/teachers/1" \
+    -H "Authorization: Bearer <your_token>"
+    ```
+
+#### Update Teacher
+*   **Endpoint:** `PUT /teachers/{teacher_id}`
+*   **Permission:** `teachers:update`
+*   **Description:** Updates a teacher's profile information.
+*   **Body:** `TeacherUpdate` schema.
+*   **cURL Example:**
+    ```bash
+    curl -X PUT "http://localhost:8000/api/teachers/1" \
+    -H "Authorization: Bearer <your_token>" \
+    -H "Content-Type: application/json" \
+    -d '{
+          "specialization": "Quantum Physics",
+          "salary_grade": "Grade 5"
+        }'
+    ```
+
+#### Update Teacher Status
+*   **Endpoint:** `PUT /teachers/{teacher_id}/status`
+*   **Permission:** `teachers:update_status`
+*   **Description:** Updates the employment status of a teacher (e.g., "Active", "On Leave").
+*   **Body:** `TeacherStatusUpdate` schema.
+*   **cURL Example:**
+    ```bash
+    curl -X PUT "http://localhost:8000/api/teachers/1/status" \
+    -H "Authorization: Bearer <your_token>" \
+    -H "Content-Type: application/json" \
+    -d '{
+          "status": "On Leave"
+        }'
+    ```
+
+#### Assign Teacher to Class/Subject
+*   **Endpoint:** `POST /teachers/assignments`
+*   **Permission:** `teachers:assign`
+*   **Description:** Assigns a teacher to a specific subject and class for an academic session.
+*   **Body:** `TeacherAssignmentCreate` schema.
+*   **cURL Example:**
+    ```bash
+    curl -X POST "http://localhost:8000/api/teachers/assignments" \
+    -H "Authorization: Bearer <your_token>" \
+    -H "Content-Type: application/json" \
+    -d '{
+          "teacher_id": 1,
+          "subject_id": 10,
+          "class_id": 5,
+          "academic_session_id": 2
+        }'
+    ```
+
+#### Get Teacher Assignments
+*   **Endpoint:** `GET /teachers/{teacher_id}/assignments`
+*   **Permission:** `teachers:view` (Note: Teachers can always view their own assignments).
+*   **Description:** Retrieves all class/subject assignments for a specific teacher.
+*   **cURL Example:**
+    ```bash
+    curl -X GET "http://localhost:8000/api/teachers/1/assignments?academic_session_id=2" \
+    -H "Authorization: Bearer <your_token>"
+    ```
+
+#### Remove Teacher Assignment
+*   **Endpoint:** `DELETE /teachers/assignments/{teacher_id}/{subject_id}/{class_id}`
+*   **Permission:** `teachers:unassign`
+*   **Description:** Removes a single class/subject assignment from a teacher.
+*   **cURL Example:**
+    ```bash
+    curl -X DELETE "http://localhost:8000/api/teachers/assignments/1/10/5?academic_session_id=2" \
+    -H "Authorization: Bearer <your_token>"
+    ```
+
+#### Remove All Teacher Assignments
+*   **Endpoint:** `POST /teachers/{teacher_id}/unassign-all`
+*   **Permission:** `teachers:unassign_all`
+*   **Description:** Removes all assignments for a teacher, optionally filtered by academic session.
+*   **cURL Example:**
+    ```bash
+    curl -X POST "http://localhost:8000/api/teachers/1/unassign-all?academic_session_id=2" \
+    -H "Authorization: Bearer <your_token>"
+    ```
+
+### Attendance Management
+
+### Authentic Locations
+
+Authentic Locations are GPS-defined areas where teachers can mark their attendance. This ensures that attendance is only recorded when teachers are physically present at the school premises.
+
+#### Key Concepts
+- **Geofencing**: Teachers must be within a defined radius of an authentic location to mark attendance
+- **School-Specific**: Each school can define multiple valid locations (e.g., main gate, staff room)
+- **Verification**: System verifies the teacher's location before recording attendance
+
+#### Manage Authentic Locations
+
+*   **Endpoint:** `POST /api/authentic-locations`
+*   **Permission:** `locations:create`
+*   **Description:** Define a new valid location for teacher attendance
+*   **Body:** `AuthenticLocationCreate` schema
+*   **cURL Example:**
+    ```bash
+    curl -X POST "http://localhost:8000/api/authentic-locations" \
+    -H "Authorization: Bearer <your_token>" \
+    -H "Content-Type: application/json" \
+    -d '{
+          "name": "Main Staff Entrance",
+          "description": "Primary entrance for staff attendance",
+          "latitude": 6.5244,
+          "longitude": 3.3792,
+          "radius_meters": 100,
+          "is_default": true
+        }'
+    ```
+
+*   **Endpoint:** `GET /api/authentic-locations`
+*   **Permission:** `locations:view`
+*   **Description:** List all authentic locations for the current school
+*   **cURL Example:**
+    ```bash
+    curl -X GET "http://localhost:8000/api/authentic-locations" \
+    -H "Authorization: Bearer <your_token>"
+    ```
+
+#### Verify Location
+
+*   **Endpoint:** `POST /api/attendance/verify-location`
+*   **Permission:** `attendance:take`
+*   **Description:** Check if current GPS coordinates are within any valid location
+*   **Body:** `LocationVerificationRequest`
+*   **cURL Example:**
+    ```bash
+    curl -X POST "http://localhost:8000/api/attendance/verify-location" \
+    -H "Authorization: Bearer <your_token>" \
+    -H "Content-Type: application/json" \
+    -d '{
+          "latitude": 6.5245,
+          "longitude": 3.3791
+        }'
+    ```
+    **Response:**
+    ```json
+    {
+      "valid": true,
+      "location_name": "Main Staff Entrance",
+      "distance_meters": 12.5
+    }
+    ```
+
+### Teacher Attendance
+
+#### Mark Attendance (Clock In/Out)
+
+*   **Endpoint:** `POST /api/teacher-attendance`
+*   **Permission:** `attendance:take`
+*   **Description:** Record teacher attendance (clock in)
+*   **Body:** `TeacherAttendanceCreate` schema
+*   **cURL Example:**
+    ```bash
+    curl -X POST "http://localhost:8000/api/teacher-attendance" \
+    -H "Authorization: Bearer <your_token>" \
+    -H "Content-Type: application/json" \
+    -d '{
+          "teacher_id": 45,
+          "date": "2025-06-25",
+          "status": "Present",
+          "clock_in_latitude": 6.5245,
+          "clock_in_longitude": 3.3791
+        }'
+    ```
+
+*   **Endpoint:** `PUT /api/teacher-attendance/{attendance_id}`
+*   **Permission:** `attendance:take`
+*   **Description:** Update teacher attendance (clock out)
+*   **Body:** `TeacherAttendanceUpdate` schema
+*   **cURL Example:**
+    ```bash
+    curl -X PUT "http://localhost:8000/api/teacher-attendance/123" \
+    -H "Authorization: Bearer <your_token>" \
+    -H "Content-Type: application/json" \
+    -d '{
+          "clock_out_time": "2025-06-25T16:30:00",
+          "clock_out_latitude": 6.5245,
+          "clock_out_longitude": 3.3791
+        }'
+    ```
+
+#### View Attendance Records
+
+*   **Endpoint:** `GET /api/teacher-attendance`
+*   **Permission:** `attendance:view`
+*   **Description:** Get teacher attendance records (filterable by date range, teacher)
+*   **Query Parameters:**
+    - `teacher_id` (optional)
+    - `start_date` (optional)
+    - `end_date` (optional)
+*   **cURL Example:**
+    ```bash
+    curl -X GET "http://localhost:8000/api/teacher-attendance?start_date=2025-06-01&end_date=2025-06-30" \
+    -H "Authorization: Bearer <your_token>"
+    ```
+
+## Super Admin
 This section outlines endpoints that are restricted to users with the 'Super Admin' role. These endpoints provide system-wide data and analytics.
 
 #### Get Global Analytics
@@ -162,37 +641,39 @@ curl -X GET http://127.0.0.1:8000/api/super-admin/analytics/global \
 
 ---
 
+## School Setup Guide
+
+### Setting Up Authentic Locations
+
+1. **Add Authentic Locations**
+   - School administrators should define all valid locations where teachers can mark attendance
+   - Each location requires:
+     - Name (e.g., "Main Gate", "Staff Room")
+     - GPS coordinates (latitude/longitude)
+     - Radius in meters (e.g., 100 meters)
+     - Optional: Set as default location
+
+2. **Mobile App Integration**
+   - The mobile app will automatically detect when teachers are within a valid location
+   - Teachers must enable location services for the app
+   - The app will show which location is being used for verification
+
+3. **Troubleshooting**
+   - If a teacher can't mark attendance:
+     1. Verify they have the `attendance:take` permission
+     2. Check if their device's location services are enabled
+     3. Ensure they are within the defined radius of an authentic location
+     4. Verify the school has at least one active authentic location
+
 ## Super Admin Setup
 
-To create a super admin user for system-wide management, follow these steps. This user will have access to all resources across all schools.
+The Super Admin role is a system-level role with unrestricted access to all data across all schools. This role is intended for system maintenance and global analytics.
 
-1.  **Create the Super Admin Role and Assign Permissions**:
-    This SQL script first creates the `Super Admin` role if it does not already exist. It then intelligently assigns all available permissions from the `permissions` table to this role, ensuring the Super Admin has full system access. The `LEFT JOIN` ensures that only permissions not already assigned are added, making the script safe to run multiple times.
+**Role Creation and Permissions (Automated)**
 
-    ```sql
-    -- Step 1: Insert the 'Super Admin' role if it doesn't exist.
-    -- This role is marked as a system role, protecting it from accidental deletion.
-    INSERT INTO roles (name, description, is_system_role, created_at, updated_at)
-    VALUES ('Super Admin', 'System administrator with full access', true, NOW(), NOW())
-    ON CONFLICT (name) DO NOTHING;
+The `Super Admin` role is now created and granted all permissions **automatically** when you run your database migrations (`alembic upgrade head`). The system is designed to ensure that upon initial setup, the Super Admin is fully empowered without needing manual SQL commands.
 
-    -- Step 2: Assign all existing permissions to the 'Super Admin' role.
-    -- This query finds all permissions that are not yet assigned to the Super Admin
-    -- and creates the association in the `role_permissions` table.
-    INSERT INTO role_permissions (role_id, permission_id, created_at, updated_at)
-    SELECT
-      (SELECT id FROM roles WHERE name = 'Super Admin') as role_id,
-      p.id as permission_id,
-      NOW(),
-      NOW()
-    FROM permissions p
-    LEFT JOIN role_permissions rp ON rp.permission_id = p.id AND rp.role_id = (SELECT id FROM roles WHERE name = 'Super Admin')
-    WHERE rp.permission_id IS NULL;
-    ```
-
-2.  **Create a Super Admin User via API**:
-
-    ```bash
+If you ever add new permissions to the system, you will need to re-run the permission-granting logic to update the Super Admin role. A helper script (`scripts/fix_super_admin_permissions.py`) is provided for this purpose.
     # First, create a dedicated school for system administration
     curl -X POST http://127.0.0.1:8000/api/schools \
       -H "Content-Type: application/json" \

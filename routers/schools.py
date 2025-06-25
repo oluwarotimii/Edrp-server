@@ -24,7 +24,12 @@ async def register_school(
     school: SchoolCreate,
     db: Session = Depends(get_db)
 ):
-    """Register a new school and its first admin user"""
+    """
+    Register a new school and its first admin user.
+    
+    The school will be assigned a subdomain based on the school name if not provided.
+    The subdomain must be unique across all schools.
+    """
     # Check if school email already exists
     existing_school = db.query(School).filter(School.email == school.email).first()
     if existing_school:
@@ -49,10 +54,37 @@ async def register_school(
         join_code = generate_join_code()
         while db.query(School).filter(School.join_code == join_code).first():
             join_code = generate_join_code()
+            
+        # Generate subdomain if not provided
+        subdomain = getattr(school, 'subdomain', None)
+        if not subdomain and hasattr(school, 'name'):
+            from ..models.school import School as SchoolModel
+            subdomain = SchoolModel.generate_subdomain(school.name)
+            
+            # Ensure the generated subdomain is unique
+            counter = 1
+            original_subdomain = subdomain
+            while db.query(School).filter(School.subdomain == subdomain).first():
+                subdomain = f"{original_subdomain}-{counter}"
+                counter += 1
+        
+        # Validate subdomain if provided
+        if subdomain:
+            from ..schemas.school import SubdomainBase
+            try:
+                subdomain = SubdomainBase.validate_subdomain(subdomain)
+                # Check if subdomain is already taken
+                if db.query(School).filter(School.subdomain == subdomain).first():
+                    raise ValidationException(f"Subdomain '{subdomain}' is already taken")
+            except ValueError as e:
+                raise ValidationException(str(e))
+        else:
+            raise ValidationException("Could not generate a valid subdomain from the school name")
 
         # Create the school
         db_school = School(
             name=school.name,
+            subdomain=subdomain,
             address=school.address,
             phone=school.phone,
             email=school.email,

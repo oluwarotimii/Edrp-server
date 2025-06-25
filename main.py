@@ -15,8 +15,9 @@ from database import engine, Base
 from routers import (
     schools, users, students, teachers, academic, 
     attendance, assessments, fees, communication, 
-    timetable, admissions, admin, happenings, auth, super_admin, roles
+    timetable, admissions, admin, happenings, auth, super_admin, roles, subdomains, subscriptions
 )
+from routers.admin import email_templates
 from utils.exceptions import setup_exception_handlers
 
 
@@ -62,6 +63,7 @@ setup_exception_handlers(app)
 # System-level management for Super Admins
 app.include_router(roles.router, tags=["System Management (Super Admin)"]) # Prefix is /api/system
 app.include_router(super_admin.router, prefix="/api/super-admin", tags=["System Management (Super Admin)"])
+app.include_router(email_templates.router, prefix="/api/admin", tags=["Email Templates (Super Admin)"])
 
 # School-level management for School Admins
 app.include_router(users.role_router, prefix="/api/school", tags=["School Role Management (School Admin)"])
@@ -71,6 +73,7 @@ app.include_router(admin.router, prefix="/api/admin", tags=["School Management (
 # Core application endpoints
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(users.router, prefix="/api/users", tags=["User Management"])
+app.include_router(subscriptions.router)  # No prefix as it's already set in the router
 app.include_router(schools.router, prefix="/api", tags=["Schools"])
 app.include_router(students.router, prefix="/api", tags=["Students"])
 app.include_router(teachers.router, prefix="/api", tags=["Teachers"])
@@ -82,6 +85,10 @@ app.include_router(communication.router, prefix="/api", tags=["Communication"])
 app.include_router(timetable.router, prefix="/api", tags=["Timetable"])
 app.include_router(admissions.router, prefix="/api", tags=["Admissions"])
 app.include_router(happenings.router, prefix="/api", tags=["Happenings"])
+
+# Include subdomain router and middleware
+app.include_router(subdomains.router)
+subdomains.register_subdomain_routes(app)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
