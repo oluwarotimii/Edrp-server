@@ -1,13 +1,29 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
+from enum import Enum
+from .user import GenderEnum
 from typing import Optional, List, Dict, Any
 from datetime import datetime, date
+
+class ApplicationStatusEnum(str, Enum):
+    SUBMITTED = "Submitted"
+    REVIEWING = "Reviewing"
+    APPROVED = "Approved"
+    REJECTED = "Rejected"
+    WAITLISTED = "Waitlisted"
 
 class AdmissionApplicationBase(BaseModel):
     first_name: str
     last_name: str
     middle_name: Optional[str] = None
     date_of_birth: date
-    gender: str
+    gender: GenderEnum
+
+    @field_validator('gender', mode='before')
+    @classmethod
+    def title_case_gender(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.title()
+        return v
     address: str
     phone: Optional[str] = None
     email: Optional[EmailStr] = None
@@ -43,7 +59,14 @@ class AdmissionApplication(AdmissionApplicationBase):
     id: int
     application_number: str
     school_id: int
-    status: str = "submitted"
+    status: ApplicationStatusEnum = ApplicationStatusEnum.SUBMITTED
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def title_case_status(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.title()
+        return v
     submission_date: Optional[datetime] = None
     review_date: Optional[datetime] = None
     reviewed_by: Optional[int] = None
@@ -79,7 +102,14 @@ class ApplicationDocument(ApplicationDocumentBase):
         from_attributes = True
 
 class ApplicationStatusUpdate(BaseModel):
-    status: str
+    status: ApplicationStatusEnum
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def title_case_status(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.title()
+        return v
     rejection_reason: Optional[str] = None
     notes: Optional[str] = None
 

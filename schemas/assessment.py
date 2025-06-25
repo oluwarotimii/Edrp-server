@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime, date
 
@@ -53,6 +53,14 @@ class GradingScaleBase(BaseModel):
     max_score: float
     description: Optional[str] = None
     gpa_value: Optional[float] = None
+
+    @field_validator('grade', mode='before')
+    @classmethod
+    def uppercase_grade(cls, v: str) -> str:
+        """Ensure grade is always in uppercase."""
+        if isinstance(v, str):
+            return v.upper()
+        return v
 
 class GradingScaleCreate(GradingScaleBase):
     pass
@@ -143,3 +151,11 @@ class StudentResults(BaseModel):
     total_score: float
     average_score: float
     grade: str
+
+    @field_validator('grade', mode='before')
+    @classmethod
+    def uppercase_grade(cls, v: str) -> str:
+        """Ensure grade is always in uppercase."""
+        if isinstance(v, str):
+            return v.upper()
+        return v

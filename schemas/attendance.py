@@ -1,6 +1,19 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+from enum import Enum
 from typing import Optional, List
 from datetime import datetime, date, time
+
+class AttendanceStatusEnum(str, Enum):
+    PRESENT = "Present"
+    ABSENT = "Absent"
+    LATE = "Late"
+    EXCUSED = "Excused"
+
+class AttendancePeriodEnum(str, Enum):
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+    TERMLY = "termly"
 
 class AuthenticLocationBase(BaseModel):
     name: str
@@ -39,7 +52,14 @@ class AttendanceRecordBase(BaseModel):
     student_id: int
     date: date
     session_name: Optional[str] = None
-    status: str
+    status: AttendanceStatusEnum
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def title_case_status(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.title()
+        return v
     period_id: Optional[int] = None
     subject_id: Optional[int] = None
     notes: Optional[str] = None
@@ -49,7 +69,14 @@ class AttendanceRecordCreate(AttendanceRecordBase):
     longitude: Optional[float] = None
 
 class AttendanceRecordUpdate(BaseModel):
-    status: Optional[str] = None
+    status: Optional[AttendanceStatusEnum] = None
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def title_case_status(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.title()
+        return v
     notes: Optional[str] = None
 
 class AttendanceRecord(AttendanceRecordBase):
@@ -78,7 +105,14 @@ class BulkAttendanceCreate(BaseModel):
 class TeacherAttendanceBase(BaseModel):
     teacher_id: int
     date: date
-    status: str
+    status: AttendanceStatusEnum
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def title_case_status(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.title()
+        return v
     notes: Optional[str] = None
 
 class TeacherAttendanceCreate(TeacherAttendanceBase):
@@ -87,7 +121,14 @@ class TeacherAttendanceCreate(TeacherAttendanceBase):
 
 class TeacherAttendanceUpdate(BaseModel):
     clock_out_time: Optional[datetime] = None
-    status: Optional[str] = None
+    status: Optional[AttendanceStatusEnum] = None
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def title_case_status(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.title()
+        return v
     notes: Optional[str] = None
     clock_out_latitude: Optional[float] = None
     clock_out_longitude: Optional[float] = None
@@ -116,4 +157,11 @@ class AttendanceStatistics(BaseModel):
     late_days: int
     excused_days: int
     attendance_percentage: float
-    period: str  # daily, weekly, monthly, termly
+    period: AttendancePeriodEnum
+
+    @field_validator('period', mode='before')
+    @classmethod
+    def lower_case_period(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.lower()
+        return v  # daily, weekly, monthly, termly

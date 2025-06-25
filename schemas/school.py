@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, Dict, Any
 from datetime import datetime
 from enum import Enum
@@ -6,6 +6,11 @@ from enum import Enum
 class SchoolType(str, Enum):
     DAY = "Day"
     BOARDING = "Boarding"
+    NURSERY = "Nursery"
+    PRIMARY = "Primary"
+    SECONDARY = "Secondary"
+    TERTIARY = "Tertiary"
+    DAY_AND_BOARDING = "Day & Boarding"
 
 class SchoolBase(BaseModel):
     name: str
@@ -15,6 +20,14 @@ class SchoolBase(BaseModel):
     website: Optional[str] = None
     principal_name: Optional[str] = None
     school_type: SchoolType = SchoolType.DAY
+
+    @field_validator('school_type', mode='before')
+    @classmethod
+    def title_case_school_type(cls, v: str) -> str:
+        """Ensure school_type is always in title case to match the Enum."""
+        if isinstance(v, str):
+            return v.title()
+        return v
 
 class SchoolCreate(SchoolBase):
     admin_first_name: str = Field(..., min_length=2)

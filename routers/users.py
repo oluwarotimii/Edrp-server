@@ -293,29 +293,6 @@ async def get_permissions(
     permissions = db.query(Permission).all()
     return permissions
 
-@permission_router.post("/permissions", response_model=PermissionSchema)
-async def create_permission(
-    permission: PermissionCreate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Create a new permission"""
-    require_permission("permissions:create")(current_user)
-    
-    db_permission = Permission(
-        name=permission.name,
-        description=permission.description,
-        module=permission.module,
-        action=permission.action,
-        resource=permission.resource
-    )
-    
-    db.add(db_permission)
-    db.commit()
-    db.refresh(db_permission)
-    
-    return db_permission
-
 @permission_router.post("/roles/{role_id}/permissions/{permission_id}")
 async def assign_permission_to_role(
     role_id: int,

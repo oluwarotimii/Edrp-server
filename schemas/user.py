@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
+from enum import Enum
 from typing import Optional, List
 from datetime import datetime, date
 
@@ -34,15 +35,27 @@ class RoleCreate(RoleBase):
     pass
 
 
+class RoleUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
 class Role(RoleBase):
     id: int
-    school_id: int
+    school_id: Optional[int] = None
     is_system_role: bool = False
     is_active: bool = True
     permissions: List["Permission"] = []
 
     class Config:
         from_attributes = True
+
+
+# --- Enums for User Schemas ---
+class GenderEnum(str, Enum):
+    MALE = "Male"
+    FEMALE = "Female"
+    OTHER = "Other"
 
 
 # --- User Schemas ---
@@ -55,7 +68,15 @@ class UserBase(BaseModel):
     phone: Optional[str] = None
     address: Optional[str] = None
     date_of_birth: Optional[date] = None
-    gender: Optional[str] = None
+    gender: Optional[GenderEnum] = None
+
+    @field_validator('gender', mode='before')
+    @classmethod
+    def title_case_gender(cls, v: str) -> str:
+        """Ensure gender is always in title case to match the Enum."""
+        if isinstance(v, str):
+            return v.title()
+        return v
 
 
 class UserCreate(UserBase):
@@ -71,9 +92,17 @@ class UserUpdate(BaseModel):
     phone: Optional[str] = None
     address: Optional[str] = None
     date_of_birth: Optional[date] = None
-    gender: Optional[str] = None
+    gender: Optional[GenderEnum] = None
     emergency_contact: Optional[str] = None
     emergency_phone: Optional[str] = None
+
+    @field_validator('gender', mode='before')
+    @classmethod
+    def title_case_gender(cls, v: str) -> str:
+        """Ensure gender is always in title case to match the Enum."""
+        if isinstance(v, str):
+            return v.title()
+        return v
 
 
 class User(UserBase):
@@ -127,4 +156,5 @@ Role.model_rebuild()
 User.model_rebuild()
 UserResponse.model_rebuild()
 Token.model_rebuild()
+RoleUpdate.model_rebuild()
 

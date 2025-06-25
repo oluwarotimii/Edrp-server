@@ -1,14 +1,50 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+from enum import Enum
 from typing import Optional, List, Dict, Any
 from datetime import datetime, date
+
+# --- Enums for Fee Schemas ---
+class FeeFrequencyEnum(str, Enum):
+    ONE_TIME = "one_time"
+    TERMLY = "termly"
+    ANNUALLY = "annually"
+    MONTHLY = "monthly"
+
+class FeeDueDateTypeEnum(str, Enum):
+    FIXED = "fixed"
+    RELATIVE = "relative"
+
+class StudentFeeStatusEnum(str, Enum):
+    PENDING = "Pending"
+    PAID = "Paid"
+    PARTIALLY_PAID = "Partially Paid"
+    OVERDUE = "Overdue"
+
+class PaymentMethodEnum(str, Enum):
+    CASH = "Cash"
+    BANK_TRANSFER = "Bank Transfer"
+    CARD = "Card"
+    ONLINE = "Online"
+
+class PaymentStatusEnum(str, Enum):
+    COMPLETED = "Completed"
+    PENDING = "Pending"
+    FAILED = "Failed"
 
 class FeeTypeBase(BaseModel):
     name: str
     description: Optional[str] = None
     amount: float
     is_mandatory: bool = True
-    frequency: str = "one_time"
-    due_date_type: str = "fixed"
+    frequency: FeeFrequencyEnum = FeeFrequencyEnum.ONE_TIME
+    due_date_type: FeeDueDateTypeEnum = FeeDueDateTypeEnum.FIXED
+
+    @field_validator('frequency', 'due_date_type', mode='before')
+    @classmethod
+    def lower_case_fields(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.lower()
+        return v
 
 class FeeTypeCreate(FeeTypeBase):
     pass
@@ -18,8 +54,15 @@ class FeeTypeUpdate(BaseModel):
     description: Optional[str] = None
     amount: Optional[float] = None
     is_mandatory: Optional[bool] = None
-    frequency: Optional[str] = None
-    due_date_type: Optional[str] = None
+    frequency: Optional[FeeFrequencyEnum] = None
+    due_date_type: Optional[FeeDueDateTypeEnum] = None
+
+    @field_validator('frequency', 'due_date_type', mode='before')
+    @classmethod
+    def lower_case_fields(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.lower()
+        return v
 
 class FeeType(FeeTypeBase):
     id: int
@@ -48,12 +91,26 @@ class StudentFeeUpdate(BaseModel):
     due_date: Optional[date] = None
     discount_amount: Optional[float] = None
     discount_reason: Optional[str] = None
-    status: Optional[str] = None
+    status: Optional[StudentFeeStatusEnum] = None
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def title_case_status(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.title()
+        return v
 
 class StudentFee(StudentFeeBase):
     id: int
     school_id: int
-    status: str = "pending"
+    status: StudentFeeStatusEnum = StudentFeeStatusEnum.PENDING
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def title_case_status(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.title()
+        return v
     is_active: bool = True
     created_at: datetime
 
@@ -72,7 +129,14 @@ class PaymentBase(BaseModel):
     student_fee_id: int
     amount: float
     payment_date: date
-    payment_method: str
+    payment_method: PaymentMethodEnum
+
+    @field_validator('payment_method', mode='before')
+    @classmethod
+    def title_case_payment_method(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.title()
+        return v
     reference_number: Optional[str] = None
     notes: Optional[str] = None
 
@@ -80,14 +144,28 @@ class PaymentCreate(PaymentBase):
     pass
 
 class PaymentUpdate(BaseModel):
-    status: Optional[str] = None
+    status: Optional[PaymentStatusEnum] = None
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def title_case_status(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.title()
+        return v
     notes: Optional[str] = None
 
 class Payment(PaymentBase):
     id: int
     school_id: int
     paystack_reference: Optional[str] = None
-    status: str = "completed"
+    status: PaymentStatusEnum = PaymentStatusEnum.COMPLETED
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def title_case_status(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.title()
+        return v
     recorded_by: Optional[int] = None
     receipt_number: Optional[str] = None
     gateway_response: Dict[str, Any] = {}

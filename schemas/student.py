@@ -1,18 +1,60 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
+from enum import Enum
 from typing import Optional, List, Dict, Any
 from datetime import datetime, date
+
+# --- Enums for Student Schemas ---
+class BoardingStatusEnum(str, Enum):
+    DAY = "Day"
+    BOARDING = "Boarding"
+
+class StudentStatusEnum(str, Enum):
+    ACTIVE = "Active"
+    INACTIVE = "Inactive"
+    GRADUATED = "Graduated"
+    WITHDRAWN = "Withdrawn"
+
+class RelationshipTypeEnum(str, Enum):
+    FATHER = "Father"
+    MOTHER = "Mother"
+    GUARDIAN = "Guardian"
+    OTHER = "Other"
+
+class BloodGroupEnum(str, Enum):
+    A_POSITIVE = "A+"
+    A_NEGATIVE = "A-"
+    B_POSITIVE = "B+"
+    B_NEGATIVE = "B-"
+    AB_POSITIVE = "AB+"
+    AB_NEGATIVE = "AB-"
+    O_POSITIVE = "O+"
+    O_NEGATIVE = "O-"
 
 class StudentBase(BaseModel):
     student_id: str
     admission_number: Optional[str] = None
     class_id: Optional[int] = None
     admission_date: Optional[date] = None
-    boarding_status: Optional[str] = None
+    boarding_status: Optional[BoardingStatusEnum] = None
     emergency_contact_name: Optional[str] = None
     emergency_contact_phone: Optional[str] = None
     emergency_contact_relationship: Optional[str] = None
     previous_school: Optional[str] = None
-    blood_group: Optional[str] = None
+    blood_group: Optional[BloodGroupEnum] = None
+
+    @field_validator('boarding_status', 'emergency_contact_relationship', mode='before')
+    @classmethod
+    def title_case_fields(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.title()
+        return v
+
+    @field_validator('blood_group', mode='before')
+    @classmethod
+    def upper_case_blood_group(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.upper()
+        return v
     allergies: Optional[str] = None
     medications: Optional[str] = None
     special_needs: Optional[str] = None
@@ -23,12 +65,26 @@ class StudentCreate(StudentBase):
 class StudentUpdate(BaseModel):
     admission_number: Optional[str] = None
     class_id: Optional[int] = None
-    boarding_status: Optional[str] = None
+    boarding_status: Optional[BoardingStatusEnum] = None
     emergency_contact_name: Optional[str] = None
     emergency_contact_phone: Optional[str] = None
     emergency_contact_relationship: Optional[str] = None
     previous_school: Optional[str] = None
-    blood_group: Optional[str] = None
+    blood_group: Optional[BloodGroupEnum] = None
+
+    @field_validator('boarding_status', 'emergency_contact_relationship', mode='before')
+    @classmethod
+    def title_case_fields(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.title()
+        return v
+
+    @field_validator('blood_group', mode='before')
+    @classmethod
+    def upper_case_blood_group(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.upper()
+        return v
     allergies: Optional[str] = None
     medications: Optional[str] = None
     special_needs: Optional[str] = None
@@ -38,7 +94,14 @@ class Student(StudentBase):
     id: int
     user_id: int
     school_id: int
-    status: str = "active"
+    status: StudentStatusEnum = StudentStatusEnum.ACTIVE
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def title_case_status(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.title()
+        return v
     medical_info: Dict[str, Any] = {}
     graduation_date: Optional[date] = None
     withdrawal_date: Optional[date] = None
@@ -51,7 +114,14 @@ class Student(StudentBase):
 
 class StudentParentBase(BaseModel):
     parent_user_id: int
-    relationship_type: str
+    relationship_type: RelationshipTypeEnum
+
+    @field_validator('relationship_type', mode='before')
+    @classmethod
+    def title_case_relationship(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.title()
+        return v
     is_primary_contact: bool = False
     can_pick_up: bool = True
 
@@ -100,7 +170,14 @@ class StudentSubjectEnrollment(StudentSubjectEnrollmentBase):
         from_attributes = True
 
 class StudentStatusUpdate(BaseModel):
-    status: str
+    status: StudentStatusEnum
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def title_case_status(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.title()
+        return v
     notes: Optional[str] = None
     effective_date: Optional[date] = None
 

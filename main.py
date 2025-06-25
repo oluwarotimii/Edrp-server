@@ -8,11 +8,14 @@ from fastapi.responses import FileResponse, Response
 from contextlib import asynccontextmanager
 import uvicorn
 
+# Load config first to ensure all environment variables are set
+import config
+
 from database import engine, Base
 from routers import (
     schools, users, students, teachers, academic, 
     attendance, assessments, fees, communication, 
-    timetable, admissions, admin, happenings, auth, super_admin
+    timetable, admissions, admin, happenings, auth, super_admin, roles
 )
 from utils.exceptions import setup_exception_handlers
 
@@ -54,23 +57,31 @@ def setup_exception_handlers(app: FastAPI):
 
 setup_exception_handlers(app)
 
-# Include routers
-app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
-app.include_router(schools.router, prefix="/api", tags=["schools"])
-app.include_router(users.role_router, prefix="/api", tags=["roles"])
-app.include_router(users.permission_router, prefix="/api", tags=["permissions"])
-app.include_router(super_admin.router, prefix="/api/super-admin", tags=["super-admin"])
-app.include_router(students.router, prefix="/api", tags=["students"])
-app.include_router(teachers.router, prefix="/api", tags=["teachers"])
-app.include_router(academic.router, prefix="/api", tags=["academic"])
-app.include_router(attendance.router, prefix="/api", tags=["attendance"])
-app.include_router(assessments.router, prefix="/api", tags=["assessments"])
-app.include_router(fees.router, prefix="/api", tags=["fees"])
-app.include_router(communication.router, prefix="/api", tags=["communication"])
-app.include_router(timetable.router, prefix="/api", tags=["timetable"])
-app.include_router(admissions.router, prefix="/api", tags=["admissions"])
-app.include_router(admin.router, prefix="/api", tags=["admin"])
-app.include_router(happenings.router, prefix="/api", tags=["happenings"])
+# --- Router Registration ---
+
+# System-level management for Super Admins
+app.include_router(roles.router, tags=["System Management (Super Admin)"]) # Prefix is /api/system
+app.include_router(super_admin.router, prefix="/api/super-admin", tags=["System Management (Super Admin)"])
+
+# School-level management for School Admins
+app.include_router(users.role_router, prefix="/api/school", tags=["School Role Management (School Admin)"])
+app.include_router(users.permission_router, prefix="/api/school", tags=["School Role Management (School Admin)"])
+app.include_router(admin.router, prefix="/api/admin", tags=["School Management (School Admin)"]) # General school admin tasks
+
+# Core application endpoints
+app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+app.include_router(users.router, prefix="/api/users", tags=["User Management"])
+app.include_router(schools.router, prefix="/api", tags=["Schools"])
+app.include_router(students.router, prefix="/api", tags=["Students"])
+app.include_router(teachers.router, prefix="/api", tags=["Teachers"])
+app.include_router(academic.router, prefix="/api", tags=["Academic"])
+app.include_router(attendance.router, prefix="/api", tags=["Attendance"])
+app.include_router(assessments.router, prefix="/api", tags=["Assessments"])
+app.include_router(fees.router, prefix="/api", tags=["Fees"])
+app.include_router(communication.router, prefix="/api", tags=["Communication"])
+app.include_router(timetable.router, prefix="/api", tags=["Timetable"])
+app.include_router(admissions.router, prefix="/api", tags=["Admissions"])
+app.include_router(happenings.router, prefix="/api", tags=["Happenings"])
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")

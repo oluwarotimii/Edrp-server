@@ -50,12 +50,9 @@ async def login(
     )
     
     return {
-        "access_token": access_token,
+        "access_token": access_token, 
         "token_type": "bearer",
-        "user_id": user.id,
-        "username": user.username,
-        "roles": user_roles,
-        "school_id": user.school_id
+        "user": user
     }
 
 @router.get("/me", response_model=UserResponse)
@@ -99,10 +96,7 @@ async def refresh_token(
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "user_id": current_user.id,
-        "username": current_user.username,
-        "roles": user_roles,
-        "school_id": current_user.school_id
+        "user": current_user
     }
 
 @router.get("/permissions")

@@ -1,5 +1,10 @@
 import os
 from typing import Optional
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+# This ensures that they are available before any other modules import and use them.
+load_dotenv()
 
 class Settings:
     # Database
