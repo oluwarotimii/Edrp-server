@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any, List
 from datetime import datetime
 from enum import Enum
 import re
-from ..models.school import School as SchoolModel
+
 
 class SchoolType(str, Enum):
     DAY = "Day"
@@ -65,6 +65,7 @@ class SchoolBase(SubdomainBase):
     
     @model_validator(mode='after')
     def generate_subdomain_if_needed(self) -> 'SchoolBase':
+        
         if not self.subdomain and hasattr(self, 'name'):
             self.subdomain = SchoolModel.generate_subdomain(self.name)
         return self
@@ -92,6 +93,7 @@ class SchoolCreate(SchoolBase):
     
     @model_validator(mode='after')
     def validate_subdomain_availability(self, db) -> 'SchoolCreate':
+        
         from sqlalchemy import exists
         from sqlalchemy.orm import Session
         
@@ -140,7 +142,7 @@ class School(SchoolBase):
     @property
     def base_url(self) -> str:
         """Get the full base URL for this school"""
-        from ..core.config import settings
+        from core.config import settings
         if settings.ENVIRONMENT == 'production':
             return f"https://{self.subdomain}.{settings.ROOT_DOMAIN}"
         return f"http://{self.subdomain}.{settings.ROOT_DOMAIN}:{settings.PORT}"

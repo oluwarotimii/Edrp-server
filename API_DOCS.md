@@ -8,6 +8,8 @@ This document provides a comprehensive guide for integrating with the Education 
 ## Table of Contents
 - [Authentication](#authentication)
 - [Subdomain Management](#subdomain-management)
+- [Email Template System](#email-template-system)
+- [Subscription System](#subscription-system)
 - [Data Validation and Enums](#data-validation-and-enums)
 - [API Endpoints](#api-endpoints)
   - [Schools](#schools)
@@ -148,6 +150,508 @@ Schools can use their own domain by configuring a CNAME record:
 | `ALLOWED_HOSTS` | Comma-separated list of allowed hosts | Yes | `*` |
 | `ENABLE_SUBDOMAINS` | Enable subdomain routing | No | `true` |
 | `DEFAULT_SCHEME` | Default URL scheme | No | `https` |
+
+## Email Template System
+
+The Email Template System provides a flexible way to manage and send dynamic, templated emails throughout the Education ERP platform. This system supports both system-generated emails (like notifications) and custom emails, with full HTML support and variable substitution.
+
+### Key Features
+
+- **Dynamic Templates**: Create templates with variables that get replaced at send time
+- **HTML Support**: Rich email formatting with full HTML support
+- **Template Management**: CRUD operations for email templates
+- **Email Tracking**: Log all sent emails with delivery status
+- **Preview & Testing**: Preview templates and send test emails
+- **Background Processing**: Non-blocking email sending
+- **Multi-tenant Support**: Templates can be scoped to specific schools or global
+
+### Template Variables
+
+Templates can include variables in double curly braces, like `{{variable_name}}`. All variables used in the template must be defined in the `variables` object when creating or updating a template.
+
+### Template Types
+
+| Type | Description |
+|------|-------------|
+| `trial_started` | Sent when a new trial starts |
+| `trial_ending_soon` | Sent when a trial is about to end |
+| `subscription_confirmation` | Sent after successful subscription |
+| `payment_failed` | Sent when a payment fails |
+| `payment_received` | Sent when a payment is received |
+| `subscription_cancelled` | Sent when a subscription is cancelled |
+| `password_reset` | For password reset emails |
+| `welcome_email` | Welcome email for new users |
+| `custom` | For custom email templates |
+
+### API Endpoints
+
+#### List All Templates
+```http
+GET /api/admin/email-templates/
+```
+
+**Query Parameters:**
+- `type`: Filter by template type
+- `is_active`: Filter by active status (true/false)
+- `search`: Search in name or subject
+- `skip`: Pagination offset
+- `limit`: Items per page (default: 10, max: 100)
+
+**Response:**
+```json
+{
+  "items": [
+    {
+      "id": "tpl_welcome",
+      "name": "Welcome Email",
+      "subject": "Welcome to {{school_name}}",
+      "template_type": "welcome_email",
+      "is_active": true,
+      "created_at": "2024-06-25T12:00:00Z"
+    }
+  ],
+  "total": 1,
+  "skip": 0,
+  "limit": 10
+}
+```
+
+#### Create New Template
+```http
+POST /api/admin/email-templates/
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "name": "New Student Welcome",
+  "subject": "Welcome to {{school_name}}, {{student_name}}!",
+  "body": "<p>Hello {{student_name}},</p><p>Welcome to {{school_name}}!</p>",
+  "template_type": "custom",
+  "variables": {
+    "student_name": "Name of the student",
+    "school_name": "Name of the school"
+  },
+  "is_active": true
+}
+```
+
+**Required Fields:**
+- `name`: Template name (unique)
+- `subject`: Email subject (can include variables)
+- `body`: Email body (HTML supported)
+- `template_type`: One of the template types listed above
+
+#### Get Template by ID
+```http
+GET /api/admin/email-templates/{template_id}
+```
+
+#### Update Template
+```http
+PUT /api/admin/email-templates/{template_id}
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "name": "Updated Template Name",
+  "subject": "Updated subject",
+  "body": "<p>Updated content</p>",
+  "is_active": true
+}
+```
+
+#### Delete Template (Soft Delete)
+```http
+DELETE /api/admin/email-templates/{template_id}
+Authorization: Bearer <token>
+```
+
+#### Preview Template
+```http
+POST /api/admin/email-templates/preview
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "template_id": "tpl_welcome",
+  "variables": {
+    "user_name": "John Doe",
+    "school_name": "Example School"
+  }
+}
+```
+
+#### Send Test Email
+```http
+POST /api/admin/email-templates/test
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "template_id": "tpl_welcome",
+  "recipient_email": "test@example.com",
+  "variables": {
+    "user_name": "Test User",
+    "school_name": "Test School"
+  }
+}
+```
+
+#### Send Custom Email
+```http
+POST /api/admin/email-templates/send-custom
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "recipient_email": "user@example.com",
+  "subject": "Custom Email Subject",
+  "body": "<p>Hello {{name}},</p><p>This is a custom email.</p>",
+  "variables": {
+    "name": "Recipient Name"
+  }
+}
+```
+
+#### View Sent Emails
+```http
+GET /api/admin/email-templates/sent-emails/
+```
+
+**Query Parameters:**
+- `status`: Filter by status (sent/delivered/failed)
+- `template_id`: Filter by template ID
+- `recipient_email`: Filter by recipient email
+- `start_date`: Filter by sent date (ISO format)
+- `end_date`: Filter by sent date (ISO format)
+- `skip`: Pagination offset
+- `limit`: Items per page (default: 10, max: 100)
+
+### Integration Guidelines
+
+1. **Creating Templates**
+   - Define all variables used in the template in the `variables` object
+   - Use the `preview` endpoint to test templates before sending
+   - Set appropriate `template_type` for better organization
+
+2. **Sending Emails**
+   - Use the `test` endpoint to verify email delivery
+   - For system-generated emails, use background tasks to avoid blocking
+   - Handle email sending errors gracefully
+
+3. **Best Practices**
+   - Keep templates DRY (Don't Repeat Yourself)
+   - Use responsive HTML for email clients
+   - Include a plain-text version for better deliverability
+   - Test templates with different email clients
+
+4. **Error Handling**
+   - Check for 4xx/5xx status codes
+   - Log email sending failures
+   - Implement retry logic for transient failures
+
+## Subscription System
+
+The Subscription System manages school subscriptions, billing cycles, and payment processing. It integrates with Paystack for payment processing and supports trial periods, multiple billing cycles, and automated email notifications.
+
+### Key Features
+
+- **Multiple Subscription Plans**: Create and manage different subscription tiers
+- **Trial Periods**: Support for free trials with configurable durations
+- **Flexible Billing**: Monthly and annual billing cycles
+- **Payment Processing**: Secure payment processing via Paystack
+- **Automatic Invoicing**: Generate and send invoices automatically
+- **Email Notifications**: Automatic emails for trial periods, renewals, and payment failures
+- **Usage Tracking**: Monitor feature usage against subscription limits
+- **Upgrade/Downgrade**: Seamless plan changes with prorated billing
+
+### Subscription Lifecycle
+
+1. **Trial Period** (if applicable)
+   - School signs up and starts a trial
+   - System sends welcome email with trial details
+   - Reminder emails sent before trial ends
+
+2. **Subscription Activation**
+   - School selects a plan and provides payment method
+   - Initial payment processed
+   - Subscription activated
+   - Welcome email with subscription details sent
+
+3. **Active Subscription**
+   - Regular billing according to plan
+   - Usage tracking and enforcement of limits
+   - Notifications for upcoming renewals
+
+4. **Renewal**
+   - Automatic payment processing
+   - Invoice generated and sent
+   - Confirmation email with receipt
+
+5. **Payment Failure**
+   - Payment retry mechanism
+   - Dunning emails for failed payments
+   - Grace period before suspension
+
+6. **Cancellation**
+   - Immediate or end-of-billing period
+   - Confirmation email
+   - Data retention according to policy
+
+### API Endpoints
+
+#### Subscription Plans
+
+##### List All Plans
+```http
+GET /api/subscriptions/plans
+```
+
+**Query Parameters:**
+- `is_active`: Filter by active status (true/false)
+- `billing_cycle`: Filter by billing cycle (monthly/yearly)
+
+**Response:**
+```json
+{
+  "items": [
+    {
+      "id": "plan_basic",
+      "name": "Basic Plan",
+      "description": "For small schools with basic needs",
+      "price": 2999,
+      "billing_cycle": "monthly",
+      "features": ["100 Students", "10 Staff", "Basic Support"],
+      "is_active": true,
+      "trial_days": 14,
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+##### Create Plan (Admin Only)
+```http
+POST /api/subscriptions/plans
+Content-Type: application/json
+Authorization: Bearer <admin_token>
+
+{
+  "name": "Pro Plan",
+  "description": "For growing schools with advanced needs",
+  "price": 5999,
+  "billing_cycle": "monthly",
+  "features": ["500 Students", "50 Staff", "Priority Support"],
+  "is_active": true,
+  "trial_days": 7,
+  "metadata": {"max_students": 500, "max_staff": 50}
+}
+```
+
+#### School Subscriptions
+
+##### Get Current Subscription
+```http
+GET /api/subscriptions/current
+```
+
+**Response:**
+```json
+{
+  "id": "sub_123",
+  "plan_id": "plan_basic",
+  "school_id": "school_123",
+  "status": "active",
+  "current_period_start": "2024-06-01T00:00:00Z",
+  "current_period_end": "2024-07-01T00:00:00Z",
+  "trial_start": "2024-05-15T00:00:00Z",
+  "trial_end": "2024-05-29T00:00:00Z",
+  "cancel_at_period_end": false,
+  "canceled_at": null,
+  "ended_at": null,
+  "created_at": "2024-05-15T00:00:00Z"
+}
+```
+
+##### Subscribe to Plan
+```http
+POST /api/subscriptions/subscribe
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "plan_id": "plan_basic",
+  "payment_method": {
+    "type": "card",
+    "card": {
+      "number": "4111111111111111",
+      "exp_month": 12,
+      "exp_year": 2025,
+      "cvc": "123"
+    }
+  },
+  "billing_details": {
+    "email": "billing@school.edu",
+    "name": "School Name"
+  }
+}
+```
+
+##### Update Subscription
+```http
+POST /api/subscriptions/update
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "plan_id": "plan_pro",
+  "prorate": true
+}
+```
+
+##### Cancel Subscription
+```http
+POST /api/subscriptions/cancel
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "cancel_at_period_end": true
+}
+```
+
+#### Invoices
+
+##### List Invoices
+```http
+GET /api/subscriptions/invoices
+```
+
+**Query Parameters:**
+- `status`: Filter by status (paid/unpaid/void)
+- `start_date`: Filter by issue date
+- `end_date`: Filter by issue date
+
+##### Get Invoice PDF
+```http
+GET /api/subscriptions/invoices/{invoice_id}/pdf
+```
+
+### Webhooks
+
+#### Paystack Webhook
+```http
+POST /api/webhooks/paystack
+X-Paystack-Signature: <signature>
+
+{
+  "event": "charge.success",
+  "data": {
+    "reference": "7c7rpkqpc0tijs8",
+    "amount": 10000,
+    "metadata": {
+      "subscription_id": "sub_123"
+    }
+  }
+}
+```
+
+### Integration Guidelines
+
+#### 1. Subscription Flow
+
+1. **Trial Signup**
+   - Create school account with trial
+   - Show available plans
+   - Track trial expiration
+
+2. **Subscription**
+   - Collect payment method
+   - Process initial payment
+   - Activate features
+
+3. **Ongoing Management**
+   - Show current usage
+   - Allow plan changes
+   - Handle payment failures
+
+#### 2. Webhook Implementation
+
+1. **Set Up Webhook Endpoint**
+   - Secure with signature verification
+   - Handle events asynchronously
+   - Implement idempotency
+
+2. **Handle Events**
+   - `subscription.created`
+   - `subscription.updated`
+   - `invoice.payment_succeeded`
+   - `invoice.payment_failed`
+
+#### 3. Error Handling
+
+- **Payment Failures**
+  - Retry logic
+  - Grace periods
+  - Dunning emails
+
+- **API Errors**
+  - Rate limiting
+  - Validation errors
+  - Authentication issues
+
+#### 4. Testing
+
+1. **Test Cards**
+   - Success: 4084084084084081
+   - 3D Secure: 5060666666666666666
+   - Insufficient Funds: 4084080000005405
+
+2. **Webhook Testing**
+   - Use test webhook endpoint
+   - Verify signature validation
+   - Test all event types
+
+### Best Practices
+
+1. **Security**
+   - Use HTTPS for all requests
+   - Validate webhook signatures
+   - Never expose API keys in client-side code
+
+2. **UX**
+   - Clear pricing
+   - Easy upgrade/downgrade
+   - Transparent billing
+
+3. **Monitoring**
+   - Track subscription metrics
+   - Monitor payment failures
+   - Set up alerts for critical events
+
+### Environment Variables
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `PAYSTACK_SECRET_KEY` | Paystack secret key | Yes | - |
+| `PAYSTACK_PUBLIC_KEY` | Paystack public key | Yes | - |
+| `PAYSTACK_WEBHOOK_SECRET` | Webhook signing secret | Yes | - |
+| `DEFAULT_TRIAL_DAYS` | Default trial period | No | 14 |
+| `GRACE_PERIOD_DAYS` | Grace period for failed payments | No | 7 |
+| `INVOICE_PREFIX` | Prefix for invoice numbers | No | INV- |
+
+### Error Codes
+
+| Code | Description | Resolution |
+|------|-------------|------------|
+| 402 | Payment Required | Update payment method |
+| 403 | Forbidden | Check permissions |
+| 404 | Not Found | Resource doesn't exist |
+| 409 | Conflict | Resolve conflict |
+| 422 | Validation Error | Check request body |
+| 429 | Too Many Requests | Rate limiting |
+| 500 | Server Error | Contact support |
 
 ### Error Responses
 
@@ -718,3 +1222,4 @@ To test the API endpoints, use the provided `cURL` commands or an API client lik
 1.  Ensure the base URL is correct for your environment (`http://127.0.0.1:8000` for local).
 2.  Replace `<access_token>` and `<refresh_token>` with valid JWTs obtained from the login endpoint.
 3.  Replace path parameters like `/api/schools/:id` with actual resource IDs.
+

@@ -1,6 +1,15 @@
 from pydantic import BaseModel, Field, validator
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+from enum import Enum
+
+class SubscriptionStatusEnum(str, Enum):
+    TRIALING = "Trialing"
+    ACTIVE = "Active"
+    INACTIVE = "Inactive"
+    CANCELLED = "Cancelled"
+    EXPIRED = "Expired"
+    PAST_DUE = "Past Due"
 
 class SubscriptionPlanBase(BaseModel):
     name: str = Field(..., max_length=100)

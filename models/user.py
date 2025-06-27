@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Table
+from sqlalchemy import (Column, Integer, String, Boolean, DateTime, ForeignKey, Table, Enum, Text, func)
 from sqlalchemy.orm import relationship, Mapped
 from .base import BaseModel, TenantBaseModel
 from typing import List, TYPE_CHECKING
@@ -96,3 +96,20 @@ class RolePermission(TenantBaseModel):
     assigned_by = Column(Integer, ForeignKey("users.id"))
     assigned_at = Column(DateTime)
     removed_at = Column(DateTime)
+
+class ProspectiveApplicant(TenantBaseModel):
+    __tablename__ = "prospective_applicants"
+
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    first_name = Column(String(100), nullable=False)
+    last_name = Column(String(100), nullable=False)
+    phone = Column(String(20))
+    is_verified = Column(Boolean, default=False)
+    verification_token = Column(String(255), unique=True, nullable=True)
+    school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    # Relationships
+    applications: Mapped[List["AdmissionApplication"]] = relationship("AdmissionApplication", back_populates="prospective_applicant")

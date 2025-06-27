@@ -11,6 +11,7 @@ import logging
 
 from database import get_db
 from models.school import School
+from models.user import User
 from schemas.school import SubdomainBase, SchoolUpdate
 from utils.dependencies import get_current_user, require_permission
 from utils.exceptions import ValidationException

@@ -8,18 +8,121 @@ import uuid
 from database import get_db
 from models.admission import AdmissionApplication, ApplicationDocument
 from models.academic import Class, AcademicSession
-from models.user import User
+from models.user import User, ProspectiveApplicant # Import ProspectiveApplicant
 from models.student import Student
 from schemas.admission import (
     AdmissionApplication as AdmissionApplicationSchema, AdmissionApplicationCreate, AdmissionApplicationUpdate,
     ApplicationDocument as ApplicationDocumentSchema, ApplicationDocumentCreate,
     ApplicationStatusUpdate, ApplicationApproval
 )
+from schemas.prospective_applicant import (
+    ProspectiveApplicantCreate, ProspectiveApplicantLogin, ProspectiveApplicantResponse, ProspectiveApplicantToken
+) # New import
 from utils.dependencies import get_current_user, require_permission, get_current_school
 from utils.exceptions import NotFoundException, ValidationException
 from config import settings
+from models.school import SchoolSubscription
+from schemas.subscription import SubscriptionStatusEnum
+from utils.storage import get_school_storage_usage
+from services.auth import get_password_hash, verify_password, create_access_token # New imports
+from services.email_service import EmailService # New import for email verification
 
 router = APIRouter()
+
+@router.post("/admissions/register-applicant", response_model=ProspectiveApplicantResponse, status_code=status.HTTP_201_CREATED)
+async def register_prospective_applicant(
+    applicant_data: ProspectiveApplicantCreate,
+    db: Session = Depends(get_db)
+):
+    """Register a new prospective applicant."""
+    # Check if email already exists
+    existing_applicant = db.query(ProspectiveApplicant).filter(
+        ProspectiveApplicant.email == applicant_data.email
+    ).first()
+    if existing_applicant:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered."
+        )
+
+    # Check if school exists
+    school = db.query(School).filter(School.id == applicant_data.school_id).first()
+    if not school:
+        raise NotFoundException("School not found.")
+
+    hashed_password = get_password_hash(applicant_data.password)
+    db_applicant = ProspectiveApplicant(
+        email=applicant_data.email,
+        hashed_password=hashed_password,
+        first_name=applicant_data.first_name,
+        last_name=applicant_data.last_name,
+        phone=applicant_data.phone,
+        school_id=applicant_data.school_id,
+        is_verified=False, # Will be verified via email
+        verification_token=str(uuid.uuid4()) # Generate a verification token
+    )
+    db.add(db_applicant)
+    db.commit()
+    db.refresh(db_applicant)
+
+    # Send verification email (placeholder)
+    email_service = EmailService(db)
+    verification_link = f"http://your-frontend-domain/verify-applicant?token={db_applicant.verification_token}"
+    await email_service.send_custom_email(
+        to_emails=[db_applicant.email],
+        subject="Verify Your Applicant Account",
+        body=f"Please click on the link to verify your account: {verification_link}"
+    )
+
+    return db_applicant
+
+@router.post("/admissions/applicant-login", response_model=ProspectiveApplicantToken)
+async def login_prospective_applicant(
+    applicant_data: ProspectiveApplicantLogin,
+    db: Session = Depends(get_db)
+):
+    """Login a prospective applicant and return an access token."""
+    applicant = db.query(ProspectiveApplicant).filter(
+        ProspectiveApplicant.email == applicant_data.email
+    ).first()
+
+    if not applicant or not verify_password(applicant_data.password, applicant.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password"
+        )
+    
+    if not applicant.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account not verified. Please check your email for verification link."
+        )
+
+    access_token = create_access_token(data={"sub": applicant.email, "school_id": applicant.school_id, "type": "prospective_applicant"})
+    return {"access_token": access_token, "token_type": "bearer", "applicant": applicant}
+
+@router.get("/admissions/verify-applicant", response_model=dict)
+async def verify_applicant_email(
+    token: str,
+    db: Session = Depends(get_db)
+):
+    """Verify prospective applicant's email using a token."""
+    applicant = db.query(ProspectiveApplicant).filter(
+        ProspectiveApplicant.verification_token == token
+    ).first()
+
+    if not applicant:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired verification token."
+        )
+
+    applicant.is_verified = True
+    applicant.verification_token = None # Invalidate token after use
+    db.commit()
+    db.refresh(applicant)
+
+    return {"message": "Email verified successfully. You can now log in."}
 
 @router.post("/admissions/applications", response_model=AdmissionApplicationSchema)
 async def submit_application(
@@ -167,24 +270,40 @@ async def upload_document(
     if not _can_access_application(current_user, application):
         require_permission("admissions:upload_documents")(current_user)
     
-    # Validate file size
+    # Validate file size against individual limit
     if file.size > settings.MAX_FILE_SIZE:
-        raise ValidationException("File size exceeds maximum allowed size")
-    
+        raise ValidationException("File size exceeds maximum allowed size per file.")
+
+    # Check school's total storage limit
+    school_subscription = db.query(SchoolSubscription).filter(
+        SchoolSubscription.school_id == school_id,
+        SchoolSubscription.status == SubscriptionStatusEnum.ACTIVE
+    ).first()
+
+    if not school_subscription:
+        raise ValidationException("School does not have an active subscription to upload documents.")
+
+    current_storage_mb = get_school_storage_usage(school_id, db)
+    if (current_storage_mb * 1024 * 1024) + file.size > (school_subscription.plan.max_storage_mb * 1024 * 1024):
+        raise ValidationException(
+            f"School storage limit ({school_subscription.plan.max_storage_mb}MB) reached. "
+            "Please upgrade your plan to upload more documents."
+        )
+
     # Create upload directory if it doesn't exist
     upload_dir = os.path.join(settings.UPLOAD_DIR, "admissions", str(application_id))
     os.makedirs(upload_dir, exist_ok=True)
-    
+
     # Generate unique filename
     file_extension = os.path.splitext(file.filename)[1]
     unique_filename = f"{uuid.uuid4()}{file_extension}"
     file_path = os.path.join(upload_dir, unique_filename)
-    
+
     # Save file
     with open(file_path, "wb") as buffer:
         content = await file.read()
         buffer.write(content)
-    
+
     # Create document record
     db_document = ApplicationDocument(
         application_id=application_id,

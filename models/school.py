@@ -3,6 +3,9 @@ from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Foreign
 from sqlalchemy.orm import relationship, Mapped
 from .base import BaseModel
 from typing import List, TYPE_CHECKING
+from datetime import datetime # Added import
+from sqlalchemy import Enum
+from schemas.subscription import SubscriptionStatusEnum
 
 if TYPE_CHECKING:
     from .user import User
@@ -40,7 +43,8 @@ class School(BaseModel):
         if not subdomain or len(subdomain) > 63 or len(subdomain) < 3:
             return False
         # Must start and end with alphanumeric, can contain hyphens in between
-        pattern = r'^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$'
+        pattern = r'^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?'
+
         return bool(re.match(pattern, subdomain))
     
     @classmethod
@@ -78,7 +82,7 @@ class SchoolSubscription(BaseModel):
     plan_id = Column(Integer, ForeignKey("subscription_plans.id"), nullable=False)
     
     # Subscription details
-    status = Column(String(20), default="active")  # active, canceled, expired, trial
+    status = Column(Enum(SubscriptionStatusEnum), default=SubscriptionStatusEnum.ACTIVE)  # Use Enum
     is_trial = Column(Boolean, default=False)
     start_date = Column(DateTime, default=func.now())
     end_date = Column(DateTime, nullable=True)
@@ -97,8 +101,5 @@ class SchoolSubscription(BaseModel):
     def is_active(self) -> bool:
         """Check if subscription is currently active"""
         now = datetime.utcnow()
-        if self.status != "active":
-            return False
-        if self.end_date and self.end_date < now:
-            return False
-        return True
+        return self.status == SubscriptionStatusEnum.ACTIVE and (self.end_date is None or self.end_date >= now)
+

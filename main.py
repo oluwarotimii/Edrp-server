@@ -15,9 +15,9 @@ from database import engine, Base
 from routers import (
     schools, users, students, teachers, academic, 
     attendance, assessments, fees, communication, 
-    timetable, admissions, admin, happenings, auth, super_admin, roles, subdomains, subscriptions
+    timetable, admissions, admin, happenings, auth, super_admin, roles, subdomains, subscriptions,
+    email_templates
 )
-from routers.admin import email_templates
 from utils.exceptions import setup_exception_handlers
 
 
@@ -63,7 +63,7 @@ setup_exception_handlers(app)
 # System-level management for Super Admins
 app.include_router(roles.router, tags=["System Management (Super Admin)"]) # Prefix is /api/system
 app.include_router(super_admin.router, prefix="/api/super-admin", tags=["System Management (Super Admin)"])
-app.include_router(email_templates.router, prefix="/api/admin", tags=["Email Templates (Super Admin)"])
+app.include_router(email_templates.router, prefix="/api/super-admin", tags=["Email Templates (Super Admin)"])
 
 # School-level management for School Admins
 app.include_router(users.role_router, prefix="/api/school", tags=["School Role Management (School Admin)"])

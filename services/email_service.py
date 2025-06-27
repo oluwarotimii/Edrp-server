@@ -48,15 +48,19 @@ class EmailService:
     async def render_template(
         self, 
         template_id: str, 
-        variables: Dict[str, Any] = None
+        variables: Dict[str, Any] = None,
+        locale: str = "en" # New: locale parameter
     ) -> Dict[str, str]:
         """Render template with variables"""
         template = await self.get_template(template_id)
         
         try:
-            # Render subject and body with variables
-            subject_template = self.env.from_string(template.subject)
-            body_template = self.env.from_string(template.body)
+            # Get subject and body based on locale, fallback to default
+            rendered_subject = template.subject_translations.get(locale, template.subject)
+            rendered_body = template.body_translations.get(locale, template.body)
+
+            subject_template = self.env.from_string(rendered_subject)
+            body_template = self.env.from_string(rendered_body)
             
             # Add default variables
             context = {
@@ -203,7 +207,11 @@ class EmailService:
         subject: str,
         body: str,
         status: str,
-        error_message: str = None
+        error_message: str = None,
+        delivery_status_code: str = None,
+        delivery_details: Dict[str, Any] = None,
+        opened_at: datetime = None,
+        clicked_at: datetime = None
     ) -> SentEmail:
         """Log sent email to database"""
         try:
@@ -215,7 +223,12 @@ class EmailService:
                 body=body,
                 status=status,
                 error_message=error_message,
-                delivered_at=datetime.utcnow() if status == "delivered" else None
+                delivery_status_code=delivery_status_code,
+                delivery_details=delivery_details,
+                sent_at=datetime.utcnow(),
+                delivered_at=datetime.utcnow() if status == "delivered" else None,
+                opened_at=opened_at,
+                clicked_at=clicked_at
             )
             
             self.db.add(sent_email)
@@ -236,16 +249,27 @@ class EmailService:
         template_id: str,
         to_emails: Union[str, List[str]],
         variables: Dict[str, Any] = None,
+        locale: str = "en", # New: locale parameter
         cc: List[str] = None,
         bcc: List[str] = None,
         reply_to: str = None,
-        attachments: List[Dict[str, Any]] = None,
+        attachments: List[Dict[str, Any]] = None, # Explicit attachments for this send
         background_tasks: BackgroundTasks = None
     ) -> Dict[str, Any]:
         """Send email using a template"""
+        # Get the template object
+        template = await self.get_template(template_id)
+
         # Render template
-        rendered = await self.render_template(template_id, variables)
+        rendered = await self.render_template(template_id, variables, locale)
         
+        # Combine predefined attachments with any provided for this send
+        all_attachments = []
+        if template.predefined_attachments:
+            all_attachments.extend(template.predefined_attachments)
+        if attachments:
+            all_attachments.extend(attachments)
+
         # Send email
         return await self.send_email(
             to_emails=to_emails,
@@ -255,7 +279,7 @@ class EmailService:
             cc=cc,
             bcc=bcc,
             reply_to=reply_to,
-            attachments=attachments,
+            attachments=all_attachments, # Pass combined attachments
             background_tasks=background_tasks
         )
     

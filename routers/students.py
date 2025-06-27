@@ -41,6 +41,26 @@ async def create_student(
     if existing_student:
         raise ValidationException("Student record already exists for this user")
     
+    # Check subscription limits
+    school_subscription = db.query(SchoolSubscription).filter(
+        SchoolSubscription.school_id == school_id,
+        SchoolSubscription.status == SubscriptionStatusEnum.ACTIVE
+    ).first()
+
+    if not school_subscription:
+        raise ValidationException("School does not have an active subscription to add students.")
+
+    current_student_count = db.query(Student).filter(
+        Student.school_id == school_id,
+        Student.status == "active" # Only count active students
+    ).count()
+
+    if current_student_count >= school_subscription.plan.max_students:
+        raise ValidationException(
+            f"Student limit ({school_subscription.plan.max_students}) reached for your current subscription plan. "
+            "Please upgrade your plan to add more students."
+        )
+
     db_student = Student(
         user_id=student.user_id,
         student_id=student.student_id,

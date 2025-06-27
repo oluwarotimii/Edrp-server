@@ -6,11 +6,12 @@ from typing import List, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .academic import Class, AcademicSession
-    from .user import User
+    from .user import User, ProspectiveApplicant
 
 class AdmissionApplication(TenantBaseModel):
     __tablename__ = "admission_applications"
     
+    prospective_applicant_id = Column(Integer, ForeignKey("prospective_applicants.id"), nullable=True) # New field
     application_number = Column(String(50), unique=True, nullable=False)
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
@@ -55,6 +56,7 @@ class AdmissionApplication(TenantBaseModel):
     class_applied: Mapped["Class"] = relationship("Class")
     academic_session: Mapped["AcademicSession"] = relationship("AcademicSession")
     reviewer: Mapped["User"] = relationship("User")
+    prospective_applicant: Mapped["ProspectiveApplicant"] = relationship("ProspectiveApplicant", back_populates="applications")
 
 class ApplicationDocument(TenantBaseModel):
     __tablename__ = "application_documents"

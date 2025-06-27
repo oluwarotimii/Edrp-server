@@ -41,6 +41,26 @@ async def create_teacher(
     if existing_teacher:
         raise ValidationException("Teacher record already exists for this user")
     
+    # Check subscription limits
+    school_subscription = db.query(SchoolSubscription).filter(
+        SchoolSubscription.school_id == school_id,
+        SchoolSubscription.status == SubscriptionStatusEnum.ACTIVE
+    ).first()
+
+    if not school_subscription:
+        raise ValidationException("School does not have an active subscription to add teachers.")
+
+    current_teacher_count = db.query(Teacher).filter(
+        Teacher.school_id == school_id,
+        Teacher.status == "active" # Only count active teachers
+    ).count()
+
+    if current_teacher_count >= school_subscription.plan.max_teachers:
+        raise ValidationException(
+            f"Teacher limit ({school_subscription.plan.max_teachers}) reached for your current subscription plan. "
+            "Please upgrade your plan to add more teachers."
+        )
+
     db_teacher = Teacher(
         user_id=teacher.user_id,
         employee_id=teacher.employee_id,
