@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from typing import Optional, Dict, Any, List
+from schemas.result_settings import ResultSettings
 from datetime import datetime
 from enum import Enum
 import re
@@ -65,7 +66,8 @@ class SchoolBase(SubdomainBase):
     
     @model_validator(mode='after')
     def generate_subdomain_if_needed(self) -> 'SchoolBase':
-        
+        # Local import to avoid circular dependency
+        from models.school import School as SchoolModel
         if not self.subdomain and hasattr(self, 'name'):
             self.subdomain = SchoolModel.generate_subdomain(self.name)
         return self
@@ -90,10 +92,12 @@ class SchoolCreate(SchoolBase):
     admin_last_name: str = Field(..., min_length=2)
     admin_email: EmailStr
     admin_password: str = Field(..., min_length=8)
+    grading_profile_id: Optional[int] = None
     
     @model_validator(mode='after')
     def validate_subdomain_availability(self, db) -> 'SchoolCreate':
-        
+        # Local import to avoid circular dependency
+        from models.school import School as SchoolModel
         from sqlalchemy import exists
         from sqlalchemy.orm import Session
         
@@ -119,7 +123,8 @@ class SchoolUpdate(SubdomainBase):
     website: Optional[str] = None
     principal_name: Optional[str] = None
     school_type: Optional[SchoolType] = None
-    settings: Optional[Dict[str, Any]] = None
+    settings: Optional[ResultSettings] = None
+    grading_profile_id: Optional[int] = None
     
     @field_validator('subdomain', mode='before')
     @classmethod
@@ -133,7 +138,7 @@ class School(SchoolBase):
     subdomain: str = Field(..., min_length=3, max_length=63)
     join_code: str
     logo_url: Optional[str] = None
-    settings: Dict[str, Any] = {}
+    settings: ResultSettings = Field(default_factory=ResultSettings) # Use default_factory for mutable defaults
     is_approved: bool = False
     is_active: bool = True
     created_at: datetime

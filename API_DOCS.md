@@ -1115,7 +1115,43 @@ Authentic Locations are GPS-defined areas where teachers can mark their attendan
 ## Super Admin
 This section outlines endpoints that are restricted to users with the 'Super Admin' role. These endpoints provide system-wide data and analytics.
 
+### Grading Profiles (Super Admin Only)
+
+The Super Admin is responsible for creating and managing Grading Profiles, which act as high-level rulebooks for how schools can configure their grading systems.
+
+#### Get All Grading Profiles
+```bash
+curl -X GET http://127.0.0.1:8000/api/system/grading-profiles 
+  -H "Authorization: Bearer <super_admin_access_token>"
+```
+
+#### Create Grading Profile
+```bash
+curl -X POST http://127.0.0.1:8000/api/system/grading-profiles 
+  -H "Authorization: Bearer <super_admin_access_token>" 
+  -H "Content-Type: application/json" 
+  -d '{
+    "name": "US GPA System",
+    "description": "A standard 4.0 GPA system.",
+    "uses_gpa": true,
+    "gpa_scale": 4.0,
+    "allows_astar_grade": false,
+    "remarks_are_mandatory": false
+  }'
+```
+
+### Assessments
+
+The assessment module is highly flexible, allowing schools to define their own assessment schemes and grading scales, all within the framework of a Grading Profile selected by the school.
+
+#### Assessment Schemes
+Schools can create their own assessment schemes to define how final scores are calculated.
+
+#### Grading Scales
+Schools can create their own grading scales to map scores to grades. The creation and updating of these scales are validated against the school's chosen Grading Profile.
+
 #### Get Global Analytics
+
 Provides a global overview of the entire system, including statistics across all schools, such as total users, students, and recent activities.
 
 - **Method**: `GET`
@@ -1222,4 +1258,4 @@ To test the API endpoints, use the provided `cURL` commands or an API client lik
 1.  Ensure the base URL is correct for your environment (`http://127.0.0.1:8000` for local).
 2.  Replace `<access_token>` and `<refresh_token>` with valid JWTs obtained from the login endpoint.
 3.  Replace path parameters like `/api/schools/:id` with actual resource IDs.
-
+~

@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, date
+from schemas.assessment import AssessmentScheme, GradingScale
 
 class DepartmentBase(BaseModel):
     name: str
@@ -125,6 +126,33 @@ class Term(TermBase):
     school_id: int
     is_active: bool = True
     created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class GradingProfileBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    uses_gpa: bool = False
+    gpa_scale: Optional[float] = 4.0
+    allows_astar_grade: bool = False
+    remarks_are_mandatory: bool = False
+
+class GradingProfileCreate(GradingProfileBase):
+    pass
+
+class GradingProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    uses_gpa: Optional[bool] = None
+    gpa_scale: Optional[float] = None
+    allows_astar_grade: Optional[bool] = None
+    remarks_are_mandatory: Optional[bool] = None
+
+class GradingProfile(GradingProfileBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True

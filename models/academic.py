@@ -1,7 +1,7 @@
 from __future__ import annotations
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Date
 from sqlalchemy.orm import relationship, Mapped
-from .base import TenantBaseModel
+from .base import TenantBaseModel, BaseModel
 from typing import List, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from .teacher import Teacher
     from .student import Student
     from .timetable import TimetableEntry
-    from .assessment import Assessment
+    from .assessment import Assessment, AssessmentScheme, GradingScale
 
 class Department(TenantBaseModel):
     __tablename__ = "departments"
@@ -98,3 +98,19 @@ class Term(TenantBaseModel):
     # Relationships
     academic_session: Mapped["AcademicSession"] = relationship("AcademicSession", back_populates="terms")
     assessments: Mapped[List["Assessment"]] = relationship("Assessment", back_populates="term")
+
+
+class GradingProfile(BaseModel):
+    __tablename__ = "grading_profiles"
+
+    name = Column(String(255), nullable=False, unique=True)
+    description = Column(Text)
+    
+    # --- Super Admin Defined Rules ---
+    uses_gpa = Column(Boolean, default=False, nullable=False)
+    gpa_scale = Column(Float, default=4.0)
+    allows_astar_grade = Column(Boolean, default=False, nullable=False)
+    remarks_are_mandatory = Column(Boolean, default=False, nullable=False)
+
+    # Relationship to schools that have adopted this profile
+    schools: Mapped[List["School"]] = relationship("School", back_populates="grading_profile")

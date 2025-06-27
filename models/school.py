@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .user import User
     from .student import Student
     from .teacher import Teacher
-    from .academic import Department
+    from .academic import Department, GradingProfile
 
 class School(BaseModel):
     __tablename__ = "schools"
@@ -27,7 +27,10 @@ class School(BaseModel):
     logo_url = Column(String(500))
     school_type = Column(String(50), nullable=False, default='Day')  # e.g., 'Day' or 'Boarding'
     settings = Column(JSON, default={})
+    grading_profile_id = Column(Integer, ForeignKey("grading_profiles.id"), nullable=True)
     is_approved = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
+    deleted_at = Column(DateTime, nullable=True)
     
     # Relationships
     users: Mapped[List["User"]] = relationship("User", back_populates="school")
@@ -35,6 +38,7 @@ class School(BaseModel):
     teachers: Mapped[List["Teacher"]] = relationship("Teacher", back_populates="school")
     departments: Mapped[List["Department"]] = relationship("Department", back_populates="school")
     subscription: Mapped["SchoolSubscription"] = relationship("SchoolSubscription", back_populates="school", uselist=False)
+    grading_profile: Mapped["GradingProfile"] = relationship("GradingProfile", back_populates="schools")
     
     @staticmethod
     def is_valid_subdomain(subdomain: str) -> bool:

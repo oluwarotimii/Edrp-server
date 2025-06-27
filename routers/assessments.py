@@ -7,6 +7,7 @@ from models.assessment import AssessmentScheme, AssessmentComponent, GradingScal
 from models.academic import Subject, Class, Term
 from models.student import Student
 from models.user import User
+from models.school import School
 from schemas.assessment import (
     AssessmentScheme as AssessmentSchemeSchema, AssessmentSchemeCreate, AssessmentSchemeUpdate,
     AssessmentComponent as AssessmentComponentSchema, AssessmentComponentCreate, AssessmentComponentUpdate,
@@ -17,6 +18,14 @@ from schemas.assessment import (
 )
 from utils.dependencies import get_current_user, require_permission, get_current_school
 from utils.exceptions import NotFoundException, ValidationException
+
+def get_school_grading_profile(school_id: int, db: Session):
+    school = db.query(School).filter(School.id == school_id).first()
+    if not school:
+        raise NotFoundException("School not found")
+    if not school.grading_profile:
+        raise ValidationException("School has not selected a grading profile.")
+    return school.grading_profile
 
 router = APIRouter()
 
@@ -309,6 +318,17 @@ async def create_grading_scale(
     """Create grading scale entry"""
     require_permission("grading_scales:create")(current_user)
     
+    profile = get_school_grading_profile(school_id, db)
+
+    if profile.uses_gpa and grade.gpa_value is None:
+        raise ValidationException("This school's grading profile requires a GPA value for each grade.")
+
+    if not profile.allows_astar_grade and grade.grade.upper() == 'A*':
+        raise ValidationException("This school's grading profile does not allow the 'A*' grade.")
+
+    if profile.remarks_are_mandatory and not grade.description:
+        raise ValidationException("This school's grading profile requires a remark for each grade.")
+
     db_grade = GradingScale(
         grade=grade.grade,
         min_score=grade.min_score,
@@ -350,6 +370,7 @@ async def update_grading_scale(
     """Update a grade level"""
     require_permission("grading_scales:update")(current_user)
     
+    profile = get_school_grading_profile(school_id, db)
     grade = db.query(GradingScale).filter(
         GradingScale.id == grade_id,
         GradingScale.school_id == school_id
@@ -357,7 +378,16 @@ async def update_grading_scale(
     
     if not grade:
         raise NotFoundException("Grade not found")
-    
+
+    if profile.uses_gpa and grade_update.gpa_value is None:
+        raise ValidationException("This school's grading profile requires a GPA value for each grade.")
+
+    if not profile.allows_astar_grade and grade_update.grade and grade_update.grade.upper() == 'A*':
+        raise ValidationException("This school's grading profile does not allow the 'A*' grade.")
+
+    if profile.remarks_are_mandatory and grade_update.description is None:
+        raise ValidationException("This school's grading profile requires a remark for each grade.")
+
     # Update fields
     for field, value in grade_update.dict(exclude_unset=True).items():
         setattr(grade, field, value)
