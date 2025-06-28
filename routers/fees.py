@@ -7,6 +7,8 @@ from database import get_db
 from models.fee import FeeType, StudentFee, Payment
 from models.student import Student
 from models.user import User
+from models.school import School
+from models.global_settings import GlobalSetting
 from schemas.fee import (
     FeeType as FeeTypeSchema, FeeTypeCreate, FeeTypeUpdate,
     StudentFee as StudentFeeSchema, StudentFeeCreate, StudentFeeUpdate, BulkStudentFeeCreate,
@@ -474,13 +476,27 @@ async def initialize_paystack_payment(
     if outstanding <= 0:
         raise ValidationException("Fee is already fully paid")
     
+    # Get school's Paystack subaccount ID
+    school = db.query(School).filter(School.id == school_id).first()
+    if not school or not school.paystack_subaccount_id:
+        raise ValidationException("School Paystack subaccount not configured.")
+
+    # Get platform fee from global settings
+    platform_fee_setting = db.query(GlobalSetting).filter(GlobalSetting.key == "platform_fee").first()
+    platform_fee = float(platform_fee_setting.value) if platform_fee_setting else 0.0 # Default to 0 if not set
+
+    # Calculate total amount including platform fee
+    total_amount_kobo = int((outstanding + platform_fee) * 100)
+
     # Initialize payment with Paystack
     paystack = PaystackService()
     result = await paystack.initialize_payment(
         email=payment_init.email,
-        amount=int(outstanding * 100),  # Convert to kobo
+        amount=total_amount_kobo,  # Convert to kobo
         reference=f"fee-{student_fee.id}-{int(datetime.now().timestamp())}",
-        callback_url=payment_init.callback_url
+        callback_url=payment_init.callback_url,
+        subaccount=school.paystack_subaccount_id,
+        transaction_charge=int(platform_fee * 100) # Platform fee in kobo
     )
     
     return result
@@ -519,9 +535,20 @@ async def verify_paystack_payment(
                     # Create payment record
                     amount = result["data"]["amount"] / 100  # Convert from kobo
                     
+                    # Get platform fee from global settings
+                    platform_fee_setting = db.query(GlobalSetting).filter(GlobalSetting.key == "platform_fee").first()
+                    platform_fee = float(platform_fee_setting.value) if platform_fee_setting else 0.0 # Default to 0 if not set
+
+                    # Calculate amounts
+                    total_amount_paid = result["data"]["amount"] / 100  # Total amount paid by customer
+                    paystack_transaction_fees = result["data"]["fees"] / 100 if "fees" in result["data"] else 0.0
+                    
+                    # The amount that went to the school is total_amount_paid - platform_fee - paystack_transaction_fees
+                    school_net_amount = total_amount_paid - platform_fee - paystack_transaction_fees
+
                     db_payment = Payment(
                         student_fee_id=fee_id,
-                        amount=amount,
+                        amount=total_amount_paid, # Total amount paid by the parent
                         payment_date=date.today(),
                         payment_method="online",
                         paystack_reference=payment_verify.reference,
@@ -529,6 +556,8 @@ async def verify_paystack_payment(
                         recorded_by=current_user.id,
                         receipt_number=f"RCP-{payment_verify.reference}",
                         gateway_response=result["data"],
+                        platform_fee_amount=platform_fee,
+                        school_net_amount=school_net_amount,
                         school_id=school_id
                     )
                     

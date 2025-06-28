@@ -82,6 +82,7 @@ async def register_school(
             raise ValidationException("Could not generate a valid subdomain from the school name")
 
         # Create the school
+        # Create the school
         db_school = School(
             name=school.name,
             subdomain=subdomain,
@@ -97,6 +98,21 @@ async def register_school(
         )
         db.add(db_school)
         db.flush()
+
+        # Create Paystack subaccount for the school
+        paystack_service = PaystackService()
+        try:
+            subaccount_response = await paystack_service.create_subaccount(
+                business_name=school.name,
+                settlement_bank=school.bank_name, # Assuming bank_name is part of SchoolCreate
+                account_number=school.account_number # Assuming account_number is part of SchoolCreate
+            )
+            if subaccount_response and subaccount_response["status"]:
+                db_school.paystack_subaccount_id = subaccount_response["data"]["subaccount_code"]
+            else:
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create Paystack subaccount")
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Paystack subaccount creation failed: {e}")
 
         # Create the admin user
         username = f"{school.admin_first_name.lower()}.{school.admin_last_name.lower()}"[:30]  # Generate username

@@ -34,5 +34,6 @@ class Settings:
     
     # Domain configuration
     ROOT_DOMAIN: str = os.getenv("ROOT_DOMAIN", "localhost")
+    PLATFORM_CHARGE_PER_TRANSACTION: float = float(os.getenv("PLATFORM_CHARGE_PER_TRANSACTION", 100.0))
 
 settings = Settings()

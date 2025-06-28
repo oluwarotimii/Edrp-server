@@ -28,6 +28,7 @@ class School(BaseModel):
     logo_url = Column(String(500))
     school_type = Column(String(50), nullable=False, default='Day')  # e.g., 'Day' or 'Boarding'
     settings = Column(JSON, default={})
+    paystack_subaccount_id = Column(String(100), nullable=True)
     grading_profile_id = Column(Integer, ForeignKey("grading_profiles.id"), nullable=True)
     is_approved = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)

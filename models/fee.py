@@ -57,6 +57,8 @@ class Payment(TenantBaseModel):
     receipt_number = Column(String(100))
     notes = Column(Text)
     gateway_response = Column(JSON, default={})
+    platform_fee_amount = Column(Float, nullable=True)
+    school_net_amount = Column(Float, nullable=True)
     
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     

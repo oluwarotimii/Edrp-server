@@ -92,6 +92,8 @@ class SchoolCreate(SchoolBase):
     admin_last_name: str = Field(..., min_length=2)
     admin_email: EmailStr
     admin_password: str = Field(..., min_length=8)
+    bank_name: str = Field(..., description="Commercial bank name for Paystack subaccount")
+    account_number: str = Field(..., description="Bank account number for Paystack subaccount")
     grading_profile_id: Optional[int] = None
     
     @model_validator(mode='after')

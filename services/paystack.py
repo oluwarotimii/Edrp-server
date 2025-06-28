@@ -44,7 +44,7 @@ class PaystackService:
                     detail=f"Error response {exc.response.status_code} while requesting {exc.request.url!r}: {exc.response.text}"
                 ) from exc
 
-    async def initialize_payment(self, email: str, amount: int, reference: str, callback_url: str = None):
+    async def initialize_payment(self, email: str, amount: int, reference: str, callback_url: str = None, subaccount: str = None, transaction_charge: int = None):
         """Initialize a payment transaction with Paystack."""
         data = {
             "email": email,
@@ -52,7 +52,24 @@ class PaystackService:
             "reference": reference,
             "callback_url": callback_url
         }
+        
+        if subaccount:
+            data["subaccount"] = subaccount
+            data["transaction_charge"] = transaction_charge
+            data["bearer"] = "subaccount" # This ensures the transaction charge is borne by the subaccount
+            
         return await self._make_request("POST", "transaction/initialize", data)
+
+    async def create_subaccount(self, business_name: str, settlement_bank: str, account_number: str, percentage_charge: float = 0.0):
+        """Create a subaccount with Paystack."""
+        data = {
+            "business_name": business_name,
+            "settlement_bank": settlement_bank,
+            "account_number": account_number,
+            "percentage_charge": percentage_charge,
+            "primary_contact_email": "info@edrp.com" # Placeholder, can be dynamic
+        }
+        return await self._make_request("POST", "subaccount", data)
 
     async def verify_payment(self, reference: str):
         """Verify a payment transaction with Paystack."""

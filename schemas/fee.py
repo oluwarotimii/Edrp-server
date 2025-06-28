@@ -169,6 +169,8 @@ class Payment(PaymentBase):
     recorded_by: Optional[int] = None
     receipt_number: Optional[str] = None
     gateway_response: Dict[str, Any] = {}
+    platform_fee_amount: Optional[float] = None
+    school_net_amount: Optional[float] = None
     is_active: bool = True
     created_at: datetime
 
