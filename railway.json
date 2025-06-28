@@ -9,7 +9,12 @@
       "shared-mime-info",
       "gir1.2-gtk-3.0",
       "libgtk-3-0",
-      "libglib2.0-0"
+      "libglib2.0-0",
+      "libglib2.0-dev",
+      "pkg-config",
+      "build-essential",
+      "libxml2-dev",
+      "libxslt1-dev"
     ]
   }
 }
