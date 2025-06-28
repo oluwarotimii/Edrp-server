@@ -177,3 +177,29 @@ class SchoolSubscription(SchoolSubscriptionBase):
 
     class Config:
         from_attributes = True
+
+
+class ReportTemplateBase(BaseModel):
+    name: str
+    template_type: str
+    html_content: str
+    is_active: bool = True
+    description: Optional[str] = None
+
+class ReportTemplateCreate(ReportTemplateBase):
+    pass
+
+class ReportTemplateUpdate(BaseModel):
+    name: Optional[str] = None
+    template_type: Optional[str] = None
+    html_content: Optional[str] = None
+    is_active: Optional[bool] = None
+    description: Optional[str] = None
+
+class ReportTemplate(ReportTemplateBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True

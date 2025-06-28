@@ -92,6 +92,7 @@ async def register_school(
             principal_name=school.principal_name,
             school_type=school.school_type.value,
             join_code=join_code,
+            join_code_generated_at=datetime.utcnow(),
             is_approved=False  # Requires platform admin approval
         )
         db.add(db_school)
@@ -222,6 +223,10 @@ async def join_school(
     
     if not school.is_approved:
         raise ValidationException("School is not approved yet")
+
+    # Check join code expiration
+    if school.join_code_generated_at and (datetime.utcnow() - school.join_code_generated_at).total_seconds() > (48 * 3600):
+        raise ValidationException("Join code has expired. Please request a new one from the school admin.")
     
     # Update user's school
     current_user.school_id = school.id
@@ -254,6 +259,7 @@ async def regenerate_join_code(
         new_code = generate_join_code()
     
     school.join_code = new_code
+    school.join_code_generated_at = datetime.utcnow()
     db.commit()
     
     return {"join_code": new_code}

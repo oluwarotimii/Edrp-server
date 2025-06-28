@@ -85,6 +85,12 @@ class UserCreate(UserBase):
     role_ids: Optional[List[int]] = []
 
 
+class UserRegisterAndJoin(UserBase):
+    password: str
+    join_code: str
+    role_name: Optional[str] = "student" # Default role for users joining with a code
+
+
 class UserUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None

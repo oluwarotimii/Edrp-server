@@ -4,6 +4,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from models.base import Base
+
 from config import settings
 
 # Get DATABASE_URL from settings
@@ -23,9 +25,7 @@ engine = create_engine(
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Create declarative base with metadata for multi-tenancy
-metadata = MetaData()
-Base = declarative_base(metadata=metadata)
+
 
 def get_db():
     """Dependency to get database session"""

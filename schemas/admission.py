@@ -1,8 +1,48 @@
 from pydantic import BaseModel, EmailStr, field_validator
 from enum import Enum
-from .user import GenderEnum
 from typing import Optional, List, Dict, Any
 from datetime import datetime, date
+
+# Base schema for a single field in the form structure
+class FormField(BaseModel):
+    field_name: str
+    label: str
+    type: str
+    required: bool
+    placeholder: Optional[str] = None
+    options: Optional[List[str]] = None
+    min_length: Optional[int] = None
+
+# Schema for creating a new AdmissionFormTemplate
+class AdmissionFormTemplateCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    is_active: bool = True
+    form_structure: List[FormField]
+    is_default: bool = False
+
+# Schema for updating an existing AdmissionFormTemplate
+class AdmissionFormTemplateUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+    form_structure: Optional[List[FormField]] = None
+    is_default: Optional[bool] = None
+
+# Schema for reading/returning an AdmissionFormTemplate
+class AdmissionFormTemplate(BaseModel):
+    id: int
+    school_id: Optional[int] = None
+    name: str
+    description: Optional[str] = None
+    is_active: bool
+    form_structure: List[FormField]
+    is_default: bool
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        orm_mode = True
 
 class ApplicationStatusEnum(str, Enum):
     SUBMITTED = "Submitted"
@@ -11,62 +51,22 @@ class ApplicationStatusEnum(str, Enum):
     REJECTED = "Rejected"
     WAITLISTED = "Waitlisted"
 
-class AdmissionApplicationBase(BaseModel):
-    first_name: str
-    last_name: str
-    middle_name: Optional[str] = None
-    date_of_birth: date
-    gender: GenderEnum
-
-    @field_validator('gender', mode='before')
-    @classmethod
-    def title_case_gender(cls, v: str) -> str:
-        if isinstance(v, str):
-            return v.title()
-        return v
-    address: str
-    phone: Optional[str] = None
-    email: Optional[EmailStr] = None
-    
-    # Parent/Guardian Information
-    parent_first_name: str
-    parent_last_name: str
-    parent_phone: str
-    parent_email: EmailStr
-    parent_occupation: Optional[str] = None
-    parent_address: Optional[str] = None
-    relationship_to_student: str
-    
-    # Academic Information
-    previous_school: Optional[str] = None
-    class_applying_for: Optional[int] = None
-    academic_session_id: Optional[int] = None
-    
-    # Additional Information
-    medical_conditions: Optional[str] = None
-    special_needs: Optional[str] = None
-    additional_info: Optional[Dict[str, Any]] = {}
-
-class AdmissionApplicationCreate(AdmissionApplicationBase):
-    pass
+class AdmissionApplicationCreate(BaseModel):
+    admission_form_template_id: int
+    form_data: Dict[str, Any]
+    prospective_applicant_id: int
 
 class AdmissionApplicationUpdate(BaseModel):
     status: Optional[str] = None
     rejection_reason: Optional[str] = None
     notes: Optional[str] = None
 
-class AdmissionApplication(AdmissionApplicationBase):
+class AdmissionApplication(BaseModel):
     id: int
-    application_number: str
-    school_id: int
+    admission_form_template_id: int
+    form_data: Dict[str, Any]
+    prospective_applicant_id: int
     status: ApplicationStatusEnum = ApplicationStatusEnum.SUBMITTED
-
-    @field_validator('status', mode='before')
-    @classmethod
-    def title_case_status(cls, v: str) -> str:
-        if isinstance(v, str):
-            return v.title()
-        return v
     submission_date: Optional[datetime] = None
     review_date: Optional[datetime] = None
     reviewed_by: Optional[int] = None
@@ -118,3 +118,10 @@ class ApplicationApproval(BaseModel):
     student_id: Optional[str] = None
     class_id: Optional[int] = None
     admission_date: Optional[date] = None
+
+class PublicApplicationStatus(BaseModel):
+    id: int
+    status: ApplicationStatusEnum
+
+    class Config:
+        from_attributes = True

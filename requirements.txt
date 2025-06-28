@@ -15,6 +15,7 @@ psycopg2-binary>=2.9.9
 SQLAlchemy>=2.0.25
 python-slugify>=8.0.1
 jinja2>=3.1.2
+WeasyPrint>=59.0
 
 # Optional dependencies (uncomment if needed)
 # boto3>=1.34.0

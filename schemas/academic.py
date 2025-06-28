@@ -86,6 +86,7 @@ class AcademicSessionBase(BaseModel):
     start_date: date
     end_date: date
     is_current: bool = False
+    is_locked: bool = False
 
 class AcademicSessionCreate(AcademicSessionBase):
     pass
@@ -95,12 +96,14 @@ class AcademicSessionUpdate(BaseModel):
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     is_current: Optional[bool] = None
+    is_locked: Optional[bool] = None
 
 class AcademicSession(AcademicSessionBase):
     id: int
     school_id: int
     is_active: bool = True
     created_at: datetime
+    locked_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -111,6 +114,7 @@ class TermBase(BaseModel):
     start_date: date
     end_date: date
     is_current: bool = False
+    is_locked: bool = False
 
 class TermCreate(TermBase):
     pass
@@ -120,15 +124,101 @@ class TermUpdate(BaseModel):
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     is_current: Optional[bool] = None
+    is_locked: Optional[bool] = None
 
 class Term(TermBase):
     id: int
     school_id: int
     is_active: bool = True
     created_at: datetime
+    locked_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
+
+
+class SubjectResultBase(BaseModel):
+    student_id: int
+    subject_id: int
+    term_id: int
+    total_score: float
+    grade: str
+    gpa: Optional[float] = None
+    rank: Optional[int] = None
+    remarks: Optional[str] = None
+
+class SubjectResultCreate(SubjectResultBase):
+    pass
+
+class SubjectResultUpdate(BaseModel):
+    total_score: Optional[float] = None
+    grade: Optional[str] = None
+    gpa: Optional[float] = None
+    rank: Optional[int] = None
+    remarks: Optional[str] = None
+
+class SubjectResult(SubjectResultBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class TermResultBase(BaseModel):
+    student_id: int
+    term_id: int
+    total_gpa: Optional[float] = None
+    total_score: Optional[float] = None
+    overall_grade: Optional[str] = None
+    position_in_class: Optional[int] = None
+    remarks: Optional[str] = None
+
+class TermResultCreate(TermResultBase):
+    pass
+
+class TermResultUpdate(BaseModel):
+    total_gpa: Optional[float] = None
+    total_score: Optional[float] = None
+    overall_grade: Optional[str] = None
+    position_in_class: Optional[int] = None
+    remarks: Optional[str] = None
+
+class TermResult(TermResultBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class StudentCumulativeResultBase(BaseModel):
+    student_id: int
+    academic_session_id: int
+    cumulative_gpa: Optional[float] = None
+    cumulative_score: Optional[float] = None
+    overall_cumulative_grade: Optional[str] = None
+    overall_cumulative_position: Optional[int] = None
+
+class StudentCumulativeResultCreate(StudentCumulativeResultBase):
+    pass
+
+class StudentCumulativeResultUpdate(BaseModel):
+    cumulative_gpa: Optional[float] = None
+    cumulative_score: Optional[float] = None
+    overall_cumulative_grade: Optional[str] = None
+    overall_cumulative_position: Optional[int] = None
+
+class StudentCumulativeResult(StudentCumulativeResultBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
 
 class GradingProfileBase(BaseModel):
     name: str

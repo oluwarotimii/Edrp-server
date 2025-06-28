@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Response
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 
 from database import get_db
 from models.assessment import AssessmentScheme, AssessmentComponent, GradingScale, Assessment, Score
-from models.academic import Subject, Class, Term
+from models.academic import Subject, Class, Term, SubjectResult, TermResult, AcademicSession
 from models.student import Student
 from models.user import User
 from models.school import School
+from services.result_calculation import calculate_subject_result_and_gpa, calculate_class_ranks, calculate_term_gpa_and_overall_results, calculate_overall_class_positions, calculate_cumulative_gpa_and_overall_results, calculate_overall_academic_session_positions
+from services.report_generation import ReportGenerationService
 from schemas.assessment import (
     AssessmentScheme as AssessmentSchemeSchema, AssessmentSchemeCreate, AssessmentSchemeUpdate,
     AssessmentComponent as AssessmentComponentSchema, AssessmentComponentCreate, AssessmentComponentUpdate,
@@ -39,6 +41,11 @@ async def create_assessment_scheme(
 ):
     """Create a new assessment scheme"""
     require_permission("assessment_schemes:create")(current_user)
+
+    # Check if current academic session is locked
+    current_session = db.query(AcademicSession).filter(AcademicSession.school_id == school_id, AcademicSession.is_current == True).first()
+    if current_session and current_session.is_locked:
+        raise ValidationException("Cannot create assessment scheme: current academic session is locked.")
     
     # If this is set as default, unset any existing default
     if scheme.is_default:
@@ -105,6 +112,11 @@ async def update_assessment_scheme(
 ):
     """Update an assessment scheme"""
     require_permission("assessment_schemes:update")(current_user)
+
+    # Check if current academic session is locked
+    current_session = db.query(AcademicSession).filter(AcademicSession.school_id == school_id, AcademicSession.is_current == True).first()
+    if current_session and current_session.is_locked:
+        raise ValidationException("Cannot update assessment scheme: current academic session is locked.")
     
     scheme = db.query(AssessmentScheme).filter(
         AssessmentScheme.id == scheme_id,
@@ -173,6 +185,11 @@ async def add_component_to_scheme(
 ):
     """Add a component to an assessment scheme"""
     require_permission("assessment_schemes:manage_components")(current_user)
+
+    # Check if current academic session is locked
+    current_session = db.query(AcademicSession).filter(AcademicSession.school_id == school_id, AcademicSession.is_current == True).first()
+    if current_session and current_session.is_locked:
+        raise ValidationException("Cannot add component to scheme: current academic session is locked.")
     
     # Verify scheme exists
     scheme = db.query(AssessmentScheme).filter(
@@ -243,6 +260,11 @@ async def update_component(
 ):
     """Update a component within a scheme"""
     require_permission("assessment_schemes:manage_components")(current_user)
+
+    # Check if current academic session is locked
+    current_session = db.query(AcademicSession).filter(AcademicSession.school_id == school_id, AcademicSession.is_current == True).first()
+    if current_session and current_session.is_locked:
+        raise ValidationException("Cannot update component: current academic session is locked.")
     
     component = db.query(AssessmentComponent).filter(
         AssessmentComponent.id == component_id,
@@ -317,6 +339,11 @@ async def create_grading_scale(
 ):
     """Create grading scale entry"""
     require_permission("grading_scales:create")(current_user)
+
+    # Check if current academic session is locked
+    current_session = db.query(AcademicSession).filter(AcademicSession.school_id == school_id, AcademicSession.is_current == True).first()
+    if current_session and current_session.is_locked:
+        raise ValidationException("Cannot create grading scale: current academic session is locked.")
     
     profile = get_school_grading_profile(school_id, db)
 
@@ -369,6 +396,11 @@ async def update_grading_scale(
 ):
     """Update a grade level"""
     require_permission("grading_scales:update")(current_user)
+
+    # Check if current academic session is locked
+    current_session = db.query(AcademicSession).filter(AcademicSession.school_id == school_id, AcademicSession.is_current == True).first()
+    if current_session and current_session.is_locked:
+        raise ValidationException("Cannot update grading scale: current academic session is locked.")
     
     profile = get_school_grading_profile(school_id, db)
     grade = db.query(GradingScale).filter(
@@ -474,6 +506,13 @@ async def create_assessment(
 ):
     """Create a new assessment"""
     require_permission("assessments:create")(current_user)
+
+    # Check if the associated term is locked
+    term = db.query(Term).filter(Term.id == assessment.term_id, Term.school_id == school_id).first()
+    if not term:
+        raise NotFoundException("Term not found")
+    if term.is_locked:
+        raise ValidationException("Cannot create assessment: the associated term is locked.")
     
     # Verify all referenced entities exist
     subject = db.query(Subject).filter(
@@ -489,13 +528,6 @@ async def create_assessment(
     ).first()
     if not class_obj:
         raise NotFoundException("Class not found")
-    
-    term = db.query(Term).filter(
-        Term.id == assessment.term_id,
-        Term.school_id == school_id
-    ).first()
-    if not term:
-        raise NotFoundException("Term not found")
     
     component = db.query(AssessmentComponent).filter(
         AssessmentComponent.id == assessment.component_id,
@@ -580,7 +612,7 @@ async def update_assessment(
 ):
     """Update an assessment"""
     require_permission("assessments:update")(current_user)
-    
+
     assessment = db.query(Assessment).filter(
         Assessment.id == assessment_id,
         Assessment.school_id == school_id
@@ -588,6 +620,11 @@ async def update_assessment(
     
     if not assessment:
         raise NotFoundException("Assessment not found")
+
+    # Check if the associated term is locked
+    term = db.query(Term).filter(Term.id == assessment.term_id, Term.school_id == school_id).first()
+    if term.is_locked:
+        raise ValidationException("Cannot update assessment: the associated term is locked.")
     
     # Update fields
     for field, value in assessment_update.dict(exclude_unset=True).items():
@@ -616,6 +653,11 @@ async def create_score(
     ).first()
     if not assessment:
         raise NotFoundException("Assessment not found")
+
+    # Check if the associated term is locked
+    term = db.query(Term).filter(Term.id == assessment.term_id, Term.school_id == school_id).first()
+    if term.is_locked:
+        raise ValidationException("Cannot create score: the associated term is locked.")
     
     student = db.query(Student).filter(
         Student.id == score.student_id,
@@ -638,7 +680,7 @@ async def create_score(
         raise ValidationException(f"Score must be between 0 and {assessment.max_score}")
     
     db_score = Score(
-        assessment_id=score.assessment_id,
+        assessment_id=score.assessment.id,
         student_id=score.student_id,
         score=score.score,
         remarks=score.remarks,
@@ -650,6 +692,16 @@ async def create_score(
     db.add(db_score)
     db.commit()
     db.refresh(db_score)
+
+    # Calculate and store subject result, grade, and GPA
+    calculate_subject_result_and_gpa(
+        db=db,
+        student_id=score.student_id,
+        subject_id=assessment.subject_id,
+        term_id=assessment.term_id,
+        total_score=score.score,
+        school_id=school_id
+    )
     
     return db_score
 
@@ -746,10 +798,17 @@ async def update_score(
     
     if not score:
         raise NotFoundException("Score not found")
+
+    # Check if the associated term is locked
+    assessment = db.query(Assessment).filter(Assessment.id == score.assessment_id).first()
+    if not assessment:
+        raise NotFoundException("Assessment not found for score.")
+    term = db.query(Term).filter(Term.id == assessment.term_id, Term.school_id == school_id).first()
+    if term.is_locked:
+        raise ValidationException("Cannot update score: the associated term is locked.")
     
     # Validate score if being updated
     if score_update.score is not None:
-        assessment = db.query(Assessment).filter(Assessment.id == score.assessment_id).first()
         if score_update.score < 0 or score_update.score > assessment.max_score:
             raise ValidationException(f"Score must be between 0 and {assessment.max_score}")
     
@@ -759,6 +818,16 @@ async def update_score(
     
     db.commit()
     db.refresh(score)
+
+    # Recalculate and store subject result, grade, and GPA
+    calculate_subject_result_and_gpa(
+        db=db,
+        student_id=score.student_id,
+        subject_id=assessment.subject_id,
+        term_id=assessment.term_id,
+        total_score=score.score,
+        school_id=school_id
+    )
     
     return score
 
@@ -808,6 +877,69 @@ async def withhold_assessment_results(
     
     return {"message": "Assessment results withheld successfully"}
 
+@router.post("/reports/calculate-term-results/{term_id}")
+async def calculate_term_results(
+    term_id: int,
+    current_user: User = Depends(get_current_user),
+    school_id: int = Depends(get_current_school),
+    db: Session = Depends(get_db)
+):
+    """Calculate and update term results (GPA, overall grade) for all students in a term."""
+    require_permission("reports:calculate")(current_user)
+
+    term = db.query(Term).filter(Term.id == term_id, Term.school_id == school_id).first()
+    if not term:
+        raise NotFoundException("Term not found")
+
+    students_in_term = db.query(Student).join(Class).join(SubjectResult).filter(
+        SubjectResult.term_id == term_id,
+        Student.school_id == school_id
+    ).distinct().all()
+
+    for student in students_in_term:
+        calculate_term_gpa_and_overall_results(db, student.id, term_id, school_id)
+
+    # After calculating term results, calculate overall class positions
+    classes_in_term = db.query(Class).join(Student).join(TermResult).filter(
+        TermResult.term_id == term_id,
+        Class.school_id == school_id
+    ).distinct().all()
+
+    for class_obj in classes_in_term:
+        calculate_overall_class_positions(db, term_id, class_obj.id, school_id)
+
+    return {"message": f"Term results and ranks calculated for term {term_id}"}
+
+@router.post("/reports/calculate-academic-session-results/{academic_session_id}")
+async def calculate_academic_session_results(
+    academic_session_id: int,
+    current_user: User = Depends(get_current_user),
+    school_id: int = Depends(get_current_school),
+    db: Session = Depends(get_db)
+):
+    """Calculate and update academic session results (cumulative GPA) for all students in a session."""
+    require_permission("reports:calculate")(current_user)
+
+    academic_session = db.query(AcademicSession).filter(
+        AcademicSession.id == academic_session_id,
+        AcademicSession.school_id == school_id
+    ).first()
+    if not academic_session:
+        raise NotFoundException("Academic Session not found")
+
+    students_in_session = db.query(Student).join(StudentCumulativeResult).filter(
+        StudentCumulativeResult.academic_session_id == academic_session_id,
+        Student.school_id == school_id
+    ).distinct().all()
+
+    for student in students_in_session:
+        calculate_cumulative_gpa_and_overall_results(db, student.id, academic_session_id, school_id)
+
+    # After calculating cumulative results, calculate overall academic session positions
+    calculate_overall_academic_session_positions(db, academic_session_id, school_id)
+
+    return {"message": f"Academic session results and ranks calculated for session {academic_session_id}"}
+
 @router.get("/student/{student_id}/results")
 async def get_student_results(
     student_id: int,
@@ -838,28 +970,25 @@ async def get_student_results(
         if not parent_link:
             require_permission("scores:view")(current_user)
     
-    query = db.query(Score).join(Assessment).filter(
-        Score.student_id == student_id,
-        Assessment.is_published == True
+    query = db.query(SubjectResult).filter(
+        SubjectResult.student_id == student_id,
+        SubjectResult.school_id == school_id
     )
     
     if term_id:
-        query = query.filter(Assessment.term_id == term_id)
+        query = query.filter(SubjectResult.term_id == term_id)
     
-    scores = query.all()
+    subject_results = query.all()
     
-    # Group by assessment and calculate totals
     results = []
-    for score in scores:
+    for sr in subject_results:
         results.append({
-            "assessment_id": score.assessment_id,
-            "assessment_name": score.assessment.name,
-            "subject": score.assessment.subject.name,
-            "score": score.score,
-            "max_score": score.assessment.max_score,
-            "percentage": (score.score / score.assessment.max_score) * 100,
-            "remarks": score.remarks,
-            "date_conducted": score.assessment.date_conducted
+            "subject_name": sr.subject.name,
+            "total_score": sr.total_score,
+            "grade": sr.grade,
+            "gpa": sr.gpa,
+            "rank": sr.rank,
+            "remarks": sr.remarks
         })
     
     return {"student_id": student_id, "results": results}
@@ -893,66 +1022,83 @@ async def get_student_report_card(
         if not parent_link:
             require_permission("reports:view")(current_user)
     
-    # Get all assessments and scores for the term
-    scores = db.query(Score).join(Assessment).filter(
-        Score.student_id == student_id,
-        Assessment.term_id == term_id,
-        Assessment.is_published == True
+    # Get all subject results for the term
+    subject_results = db.query(SubjectResult).filter(
+        SubjectResult.student_id == student_id,
+        SubjectResult.term_id == term_id,
+        SubjectResult.school_id == school_id
     ).all()
-    
-    # Group by subject and calculate subject totals
-    subject_scores = {}
-    for score in scores:
-        subject_id = score.assessment.subject_id
-        subject_name = score.assessment.subject.name
-        
-        if subject_id not in subject_scores:
-            subject_scores[subject_id] = {
-                "subject_name": subject_name,
-                "assessments": [],
-                "total_score": 0,
-                "total_max": 0
-            }
-        
-        subject_scores[subject_id]["assessments"].append({
-            "name": score.assessment.name,
-            "score": score.score,
-            "max_score": score.assessment.max_score,
-            "component": score.assessment.component.name
-        })
-        
-        subject_scores[subject_id]["total_score"] += score.score
-        subject_scores[subject_id]["total_max"] += score.assessment.max_score
-    
-    # Calculate grades
-    grading_scale = db.query(GradingScale).filter(
-        GradingScale.school_id == school_id
-    ).order_by(GradingScale.min_score.desc()).all()
-    
-    def get_grade(percentage):
-        for grade in grading_scale:
-            if percentage >= grade.min_score:
-                return grade.grade
-        return "F"
-    
+
+    term_result = db.query(TermResult).filter(
+        TermResult.student_id == student_id,
+        TermResult.term_id == term_id,
+        TermResult.school_id == school_id
+    ).first()
+
     report_card = {
         "student_id": student_id,
         "student_name": f"{student.user.first_name} {student.user.last_name}",
         "term_id": term_id,
-        "subjects": []
+        "subjects": [],
+        "overall_gpa": term_result.total_gpa if term_result else None,
+        "overall_grade": term_result.overall_grade if term_result else None,
+        "position_in_class": term_result.position_in_class if term_result else None
     }
     
-    for subject_data in subject_scores.values():
-        percentage = (subject_data["total_score"] / subject_data["total_max"]) * 100 if subject_data["total_max"] > 0 else 0
-        grade = get_grade(percentage)
-        
+    for sr in subject_results:
         report_card["subjects"].append({
-            "subject_name": subject_data["subject_name"],
-            "total_score": subject_data["total_score"],
-            "total_max": subject_data["total_max"],
-            "percentage": percentage,
-            "grade": grade,
-            "assessments": subject_data["assessments"]
+            "subject_name": sr.subject.name,
+            "total_score": sr.total_score,
+            "grade": sr.grade,
+            "gpa": sr.gpa,
+            "rank": sr.rank,
+            "remarks": sr.remarks
         })
     
     return report_card
+
+@router.get("/reports/student/{student_id}/term/{term_id}/pdf", response_class=Response, responses={200: {"content": {"application/pdf": {}}}}, summary="Generate student report card as PDF")
+async def generate_student_report_card_pdf(
+    student_id: int,
+    term_id: int,
+    template_id: int = Query(..., description="ID of the ReportTemplate to use"),
+    current_user: User = Depends(get_current_user),
+    school_id: int = Depends(get_current_school),
+    db: Session = Depends(get_db)
+):
+    """Generate a student's report card for a specific term as a PDF using a chosen template."""
+    require_permission("reports:view")(current_user)
+
+    # Basic validation (student and term existence)
+    student = db.query(Student).filter(Student.id == student_id, Student.school_id == school_id).first()
+    if not student:
+        raise NotFoundException("Student not found")
+    term = db.query(Term).filter(Term.id == term_id, Term.school_id == school_id).first()
+    if not term:
+        raise NotFoundException("Term not found")
+
+    # Check access permissions (similar to get_student_report_card)
+    if current_user.id != student.user_id:
+        from models.student import StudentParent
+        parent_link = db.query(StudentParent).filter(
+            StudentParent.student_id == student_id,
+            StudentParent.parent_user_id == current_user.id
+        ).first()
+        if not parent_link:
+            require_permission("reports:view")(current_user)
+
+    report_service = ReportGenerationService(db)
+    try:
+        pdf_content = report_service.generate_report_pdf(
+            template_id=template_id,
+            student_id=student_id,
+            term_id=term_id,
+            school_id=school_id
+        )
+        return Response(content=pdf_content, media_type="application/pdf", headers={
+            "Content-Disposition": f"attachment; filename=\"report_card_{student.student_id}_term_{term_id}.pdf\""
+        })
+    except NotFoundException as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {e}")

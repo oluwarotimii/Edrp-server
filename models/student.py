@@ -7,7 +7,7 @@ from typing import List, TYPE_CHECKING
 if TYPE_CHECKING:
     from .school import School
     from .user import User
-    from .academic import Class, Subject, AcademicSession
+    from .academic import Class, Subject, AcademicSession, SubjectResult, TermResult, StudentCumulativeResult
     from .fee import StudentFee
     from .attendance import AttendanceRecord
     from .assessment import Score
@@ -50,6 +50,9 @@ class Student(TenantBaseModel):
     attendance_records: Mapped[List["AttendanceRecord"]] = relationship("AttendanceRecord", back_populates="student")
     scores: Mapped[List["Score"]] = relationship("Score", back_populates="student")
     behavior_reports: Mapped[List["BehaviorReport"]] = relationship("BehaviorReport", back_populates="student")
+    subject_results: Mapped[List["SubjectResult"]] = relationship("SubjectResult", back_populates="student")
+    term_results: Mapped[List["TermResult"]] = relationship("TermResult", back_populates="student")
+    cumulative_results: Mapped[List["StudentCumulativeResult"]] = relationship("StudentCumulativeResult", back_populates="student")
 
 class StudentParent(TenantBaseModel):
     __tablename__ = "student_parents"

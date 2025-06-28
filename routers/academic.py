@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from datetime import datetime
 
 from database import get_db
 from models.academic import Department, Class, Subject, AcademicSession, Term
@@ -304,6 +305,11 @@ async def create_academic_session(
 ):
     """Create a new academic session"""
     require_permission("academic_sessions:create")(current_user)
+
+    # Check if current academic session is locked
+    current_session = db.query(AcademicSession).filter(AcademicSession.school_id == school_id, AcademicSession.is_current == True).first()
+    if current_session and current_session.is_locked:
+        raise ValidationException("Cannot create academic session: current academic session is locked.")
     
     # If this is marked as current, unset any existing current session
     if session.is_current:
@@ -373,7 +379,7 @@ async def update_academic_session(
 ):
     """Update an academic session"""
     require_permission("academic_sessions:update")(current_user)
-    
+
     session = db.query(AcademicSession).filter(
         AcademicSession.id == session_id,
         AcademicSession.school_id == school_id
@@ -381,6 +387,9 @@ async def update_academic_session(
     
     if not session:
         raise NotFoundException("Academic session not found")
+
+    if session.is_locked:
+        raise ValidationException("Cannot update academic session: it is locked.")
     
     # If setting as current, unset other current sessions
     if session_update.is_current:
@@ -397,6 +406,62 @@ async def update_academic_session(
     db.commit()
     db.refresh(session)
     
+    return session
+
+@router.post("/academic-sessions/{session_id}/lock", response_model=AcademicSessionSchema)
+async def lock_academic_session(
+    session_id: int,
+    current_user: User = Depends(get_current_user),
+    school_id: int = Depends(get_current_school),
+    db: Session = Depends(get_db)
+):
+    """Lock an academic session to prevent further modifications."""
+    require_permission("academic_sessions:lock")(current_user)
+
+    session = db.query(AcademicSession).filter(
+        AcademicSession.id == session_id,
+        AcademicSession.school_id == school_id
+    ).first()
+
+    if not session:
+        raise NotFoundException("Academic session not found")
+
+    if session.is_locked:
+        raise ValidationException("Academic session is already locked.")
+
+    session.is_locked = True
+    session.locked_at = datetime.utcnow()
+    db.commit()
+    db.refresh(session)
+
+    return session
+
+@router.post("/academic-sessions/{session_id}/unlock", response_model=AcademicSessionSchema)
+async def unlock_academic_session(
+    session_id: int,
+    current_user: User = Depends(get_current_user),
+    school_id: int = Depends(get_current_school),
+    db: Session = Depends(get_db)
+):
+    """Unlock an academic session to allow modifications. Requires higher permissions."""
+    require_permission("academic_sessions:unlock")(current_user) # Potentially a higher permission
+
+    session = db.query(AcademicSession).filter(
+        AcademicSession.id == session_id,
+        AcademicSession.school_id == school_id
+    ).first()
+
+    if not session:
+        raise NotFoundException("Academic session not found")
+
+    if not session.is_locked:
+        raise ValidationException("Academic session is not locked.")
+
+    session.is_locked = False
+    session.locked_at = None
+    db.commit()
+    db.refresh(session)
+
     return session
 
 # Term endpoints
@@ -418,6 +483,9 @@ async def create_term(
     
     if not session:
         raise NotFoundException("Academic session not found")
+
+    if session.is_locked:
+        raise ValidationException("Cannot create term: the academic session is locked.")
     
     # If this is marked as current, unset any existing current term
     if term.is_current:
@@ -500,6 +568,9 @@ async def update_term(
     
     if not term:
         raise NotFoundException("Term not found")
+
+    if term.is_locked:
+        raise ValidationException("Cannot update term: it is locked.")
     
     # If setting as current, unset other current terms
     if term_update.is_current:
@@ -516,4 +587,60 @@ async def update_term(
     db.commit()
     db.refresh(term)
     
+    return term
+
+@router.post("/terms/{term_id}/lock", response_model=TermSchema)
+async def lock_term(
+    term_id: int,
+    current_user: User = Depends(get_current_user),
+    school_id: int = Depends(get_current_school),
+    db: Session = Depends(get_db)
+):
+    """Lock a term to prevent further modifications."""
+    require_permission("terms:lock")(current_user)
+
+    term = db.query(Term).filter(
+        Term.id == term_id,
+        Term.school_id == school_id
+    ).first()
+
+    if not term:
+        raise NotFoundException("Term not found")
+
+    if term.is_locked:
+        raise ValidationException("Term is already locked.")
+
+    term.is_locked = True
+    term.locked_at = datetime.utcnow()
+    db.commit()
+    db.refresh(term)
+
+    return term
+
+@router.post("/terms/{term_id}/unlock", response_model=TermSchema)
+async def unlock_term(
+    term_id: int,
+    current_user: User = Depends(get_current_user),
+    school_id: int = Depends(get_current_school),
+    db: Session = Depends(get_db)
+):
+    """Unlock a term to allow modifications. Requires higher permissions."""
+    require_permission("terms:unlock")(current_user) # Potentially a higher permission
+
+    term = db.query(Term).filter(
+        Term.id == term_id,
+        Term.school_id == school_id
+    ).first()
+
+    if not term:
+        raise NotFoundException("Term not found")
+
+    if not term.is_locked:
+        raise ValidationException("Term is not locked.")
+
+    term.is_locked = False
+    term.locked_at = None
+    db.commit()
+    db.refresh(term)
+
     return term

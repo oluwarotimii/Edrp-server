@@ -1,11 +1,11 @@
-from typing import Generator, Optional
+from typing import Generator, Optional, Union
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 
 from database import get_db
-from models.user import User
+from models.user import User, ProspectiveApplicant
 from models.school import School
 from services.auth import verify_token
 from config import settings
@@ -16,8 +16,8 @@ security = HTTPBearer()
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
-) -> User:
-    """Get current authenticated user"""
+) -> Union[User, ProspectiveApplicant]:
+    """Get current authenticated user (either User or ProspectiveApplicant)"""
     
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -26,46 +26,59 @@ async def get_current_user(
     )
     
     try:
-        # Verify and decode the JWT token
-        username = verify_token(credentials.credentials)
-        if username is None:
+        payload = jwt.decode(credentials.credentials, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        username: str = payload.get("sub")
+        token_type: str = payload.get("type")
+        if username is None or token_type is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
     
-    # Get user from database
-    user = db.query(User).filter(
-        (User.username == username) | (User.email == username)
-    ).first()
-    
-    if user is None:
+    if token_type == "user":
+        user = db.query(User).filter(
+            (User.username == username) | (User.email == username)
+        ).first()
+        
+        if user is None:
+            raise credentials_exception
+        
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Account is deactivated"
+            )
+        
+        if user.is_locked:
+            raise HTTPException(
+                status_code=status.HTTP_423_LOCKED,
+                detail="Account is locked due to multiple failed login attempts"
+            )
+        
+        if not user.is_approved:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Account is pending approval"
+            )
+        return user
+    elif token_type == "prospective_applicant":
+        applicant = db.query(ProspectiveApplicant).filter(
+            ProspectiveApplicant.email == username
+        ).first()
+        
+        if applicant is None:
+            raise credentials_exception
+        
+        if not applicant.is_verified:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Account not verified. Please check your email for verification link."
+            )
+        return applicant
+    else:
         raise credentials_exception
-    
-    # Check if user account is active
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is deactivated"
-        )
-    
-    # Check if user account is locked
-    if user.is_locked:
-        raise HTTPException(
-            status_code=status.HTTP_423_LOCKED,
-            detail="Account is locked due to multiple failed login attempts"
-        )
-    
-    # Check if user is approved
-    if not user.is_approved:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is pending approval"
-        )
-    
-    return user
 
 async def get_current_school(
-    current_user: User = Depends(get_current_user),
+    current_user: Union[User, ProspectiveApplicant] = Depends(get_current_user),
     db: Session = Depends(get_db)
 ) -> int:
     """Get current user's school ID"""
@@ -76,7 +89,6 @@ async def get_current_school(
             detail="User is not associated with any school"
         )
     
-    # Verify school exists and is active
     school = db.query(School).filter(
         School.id == current_user.school_id,
         School.is_active == True
@@ -99,6 +111,12 @@ def require_permission(permission_name: str):
     ) -> User:
         """Check if current user has required permission"""
         
+        if not isinstance(current_user, User):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only authenticated users can perform this action."
+            )
+
         # Get user permissions
         user_permissions = set()
         for role in current_user.roles:
@@ -125,6 +143,12 @@ def require_any_permission(permission_names: list):
     ) -> User:
         """Check if current user has any of the required permissions"""
         
+        if not isinstance(current_user, User):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only authenticated users can perform this action."
+            )
+
         # Get user permissions
         user_permissions = set()
         for role in current_user.roles:
@@ -151,6 +175,12 @@ def require_all_permissions(permission_names: list):
     ) -> User:
         """Check if current user has all of the required permissions"""
         
+        if not isinstance(current_user, User):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only authenticated users can perform this action."
+            )
+
         # Get user permissions
         user_permissions = set()
         for role in current_user.roles:
@@ -177,6 +207,12 @@ def require_role(role_name: str):
     ) -> User:
         """Check if current user has required role"""
         
+        if not isinstance(current_user, User):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only authenticated users can perform this action."
+            )
+
         user_roles = [role.name for role in current_user.roles]
         
         if role_name not in user_roles:
@@ -197,6 +233,12 @@ def require_any_role(role_names: list):
     ) -> User:
         """Check if current user has any of the required roles"""
         
+        if not isinstance(current_user, User):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only authenticated users can perform this action."
+            )
+
         user_roles = [role.name for role in current_user.roles]
         
         if not any(role in user_roles for role in role_names):
@@ -212,50 +254,40 @@ def require_any_role(role_names: list):
 async def get_optional_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: Session = Depends(get_db)
-) -> Optional[User]:
+) -> Optional[Union[User, ProspectiveApplicant]]:
     """Get current user if authenticated, otherwise return None"""
     
     if not credentials:
         return None
     
     try:
-        username = verify_token(credentials.credentials)
-        if username is None:
+        payload = jwt.decode(credentials.credentials, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        username: str = payload.get("sub")
+        token_type: str = payload.get("type")
+        if username is None or token_type is None:
             return None
-        
+    except JWTError:
+        return None
+    
+    if token_type == "user":
         user = db.query(User).filter(
             (User.username == username) | (User.email == username)
         ).first()
         
         if user and user.is_active and not user.is_locked and user.is_approved:
             return user
-    except JWTError:
-        pass
+    elif token_type == "prospective_applicant":
+        applicant = db.query(ProspectiveApplicant).filter(
+            ProspectiveApplicant.email == username
+        ).first()
+        
+        if applicant and applicant.is_verified:
+            return applicant
     
     return None
 
-def require_school_admin():
-    """Dependency to require school admin role"""
-    return require_any_role(["school_admin", "super_admin"])
-
-def require_teacher():
-    """Dependency to require teacher role"""
-    return require_any_role(["teacher", "school_admin", "super_admin"])
-
-def require_student():
-    """Dependency to require student role"""
-    return require_any_role(["student", "teacher", "school_admin", "super_admin"])
-
-def require_parent():
-    """Dependency to require parent role"""
-    return require_any_role(["parent", "school_admin", "super_admin"])
-
-def require_staff():
-    """Dependency to require any staff role"""
-    return require_any_role(["teacher", "accountant", "school_admin", "super_admin"])
-
 async def get_user_school(
-    current_user: User = Depends(get_current_user),
+    current_user: Union[User, ProspectiveApplicant] = Depends(get_current_user),
     db: Session = Depends(get_db)
 ) -> School:
     """Get current user's school object"""
@@ -299,14 +331,15 @@ def require_school_approved():
 
 async def validate_school_access(
     school_id: int,
-    current_user: User = Depends(get_current_user)
+    current_user: Union[User, ProspectiveApplicant] = Depends(get_current_user)
 ) -> bool:
     """Validate that current user has access to the specified school"""
     
     # Super admins can access any school
-    user_roles = [role.name for role in current_user.roles]
-    if "super_admin" in user_roles:
-        return True
+    if isinstance(current_user, User):
+        user_roles = [role.name for role in current_user.roles]
+        if "super_admin" in user_roles:
+            return True
     
     # Other users can only access their own school
     if current_user.school_id != school_id:
@@ -321,15 +354,15 @@ def require_same_school_or_admin(resource_school_id: int):
     """Dependency factory to require same school or admin access"""
     
     def school_checker(
-        current_user: User = Depends(get_current_user)
-    ) -> User:
+        current_user: Union[User, ProspectiveApplicant] = Depends(get_current_user)
+    ) -> Union[User, ProspectiveApplicant]:
         """Check if user can access resource from specified school"""
         
-        user_roles = [role.name for role in current_user.roles]
-        
-        # Super admins can access any school
-        if "super_admin" in user_roles:
-            return current_user
+        if isinstance(current_user, User):
+            user_roles = [role.name for role in current_user.roles]
+            # Super admins can access any school
+            if "super_admin" in user_roles:
+                return current_user
         
         # Other users must be from the same school
         if current_user.school_id != resource_school_id:
@@ -347,7 +380,7 @@ async def rate_limit(
     identifier: str,
     max_requests: int = 100,
     window_seconds: int = 3600,
-    current_user: User = Depends(get_current_user)
+    current_user: Union[User, ProspectiveApplicant] = Depends(get_current_user)
 ) -> bool:
     """Rate limiting dependency"""
     

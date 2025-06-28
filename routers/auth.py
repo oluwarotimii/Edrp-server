@@ -2,15 +2,84 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from datetime import datetime
 
 from database import get_db
-from models.user import User, Role, Permission
-from schemas.user import Token, UserResponse, ChangePasswordRequest
+from models.user import User, Role, Permission, UserRole
+from models.school import School
+from schemas.user import Token, UserResponse, ChangePasswordRequest, UserRegisterAndJoin
 from services.auth import create_access_token, verify_password, get_password_hash
 from utils.dependencies import get_current_user
-from utils.exceptions import UnauthorizedException
+from utils.exceptions import UnauthorizedException, ValidationException, NotFoundException
 
 router = APIRouter()
+
+@router.post("/register-and-join", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def register_and_join(
+    user_data: UserRegisterAndJoin,
+    db: Session = Depends(get_db)
+):
+    """Register a new user and join a school using a join code."""
+    # Check if user with email or username already exists
+    existing_user = db.query(User).filter(
+        (User.email == user_data.email) | (User.username == user_data.username)
+    ).first()
+    if existing_user:
+        raise ValidationException("User with this email or username already exists.")
+
+    # Find the school by join code
+    school = db.query(School).filter(School.join_code == user_data.join_code).first()
+    if not school:
+        raise NotFoundException("Invalid join code.")
+    
+    # Check join code expiration
+    if school.join_code_generated_at and (datetime.utcnow() - school.join_code_generated_at).total_seconds() > (48 * 3600):
+        raise ValidationException("Join code has expired. Please request a new one from the school admin.")
+
+    if not school.is_approved:
+        raise ValidationException("School is not approved yet.")
+
+    # Determine the role to assign
+    role = db.query(Role).filter(Role.name == user_data.role_name, Role.school_id == school.id).first()
+    if not role:
+        # Fallback to 'student' role if the requested role doesn't exist for the school
+        role = db.query(Role).filter(Role.name == "student", Role.school_id == school.id).first()
+        if not role:
+            raise HTTPException(status_code=500, detail="Default 'student' role not found for this school.")
+
+    # Create the user
+    hashed_password = get_password_hash(user_data.password)
+    new_user = User(
+        email=user_data.email,
+        username=user_data.username,
+        first_name=user_data.first_name,
+        last_name=user_data.last_name,
+        middle_name=user_data.middle_name,
+        phone=user_data.phone,
+        address=user_data.address,
+        date_of_birth=user_data.date_of_birth,
+        gender=user_data.gender,
+        hashed_password=hashed_password,
+        school_id=school.id,
+        is_verified=False, # User needs to verify email
+        is_approved=False  # Requires school admin approval
+    )
+    db.add(new_user)
+    db.flush() # Flush to get user.id
+
+    # Assign the role
+    user_role_association = UserRole(
+        user_id=new_user.id,
+        role_id=role.id,
+        school_id=school.id,
+        assigned_by=None, # Self-registered
+        assigned_at=datetime.utcnow()
+    )
+    db.add(user_role_association)
+
+    db.commit()
+    db.refresh(new_user)
+    return new_user
 
 @router.post("/login", response_model=Token)
 async def login(

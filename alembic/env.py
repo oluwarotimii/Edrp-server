@@ -13,7 +13,7 @@ load_dotenv()
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import the centralized Base from database.py
-from database import Base
+from models.base import Base
 
 # Import all models to ensure they are registered with SQLAlchemy's metadata
 from models import (

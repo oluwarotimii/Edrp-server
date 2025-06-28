@@ -24,6 +24,7 @@ class School(BaseModel):
     website = Column(String(255))
     principal_name = Column(String(255))
     join_code = Column(String(10), unique=True, nullable=False)
+    join_code_generated_at = Column(DateTime, nullable=True)
     logo_url = Column(String(500))
     school_type = Column(String(50), nullable=False, default='Day')  # e.g., 'Day' or 'Boarding'
     settings = Column(JSON, default={})
@@ -106,4 +107,14 @@ class SchoolSubscription(BaseModel):
         """Check if subscription is currently active"""
         now = datetime.utcnow()
         return self.status == SubscriptionStatusEnum.ACTIVE and (self.end_date is None or self.end_date >= now)
+
+
+class ReportTemplate(BaseModel):
+    __tablename__ = "report_templates"
+
+    name = Column(String(255), nullable=False, unique=True)
+    template_type = Column(String(50), nullable=False) # e.g., 'REPORT_CARD', 'TRANSCRIPT'
+    html_content = Column(Text, nullable=False)
+    is_active = Column(Boolean, default=True)
+    description = Column(Text, nullable=True)
 

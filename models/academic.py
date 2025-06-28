@@ -1,8 +1,9 @@
 from __future__ import annotations
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Date
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Date, Float
 from sqlalchemy.orm import relationship, Mapped
 from .base import TenantBaseModel, BaseModel
 from typing import List, TYPE_CHECKING
+import sqlalchemy as sa
 
 if TYPE_CHECKING:
     from .school import School
@@ -10,6 +11,7 @@ if TYPE_CHECKING:
     from .student import Student
     from .timetable import TimetableEntry
     from .assessment import Assessment, AssessmentScheme, GradingScale
+    from .academic import SubjectResult, TermResult, StudentCumulativeResult
 
 class Department(TenantBaseModel):
     __tablename__ = "departments"
@@ -60,6 +62,7 @@ class Subject(TenantBaseModel):
     department: Mapped["Department"] = relationship("Department", back_populates="subjects")
     classes: Mapped[List["Class"]] = relationship("Class", secondary="class_subjects", back_populates="subjects")
     assessments: Mapped[List["Assessment"]] = relationship("Assessment", back_populates="subject")
+    subject_results: Mapped[List["SubjectResult"]] = relationship("SubjectResult", back_populates="subject")
 
 # Association table for many-to-many relationship between classes and subjects
 from sqlalchemy import Table
@@ -78,11 +81,14 @@ class AcademicSession(TenantBaseModel):
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
     is_current = Column(Boolean, default=False)
+    is_locked = Column(Boolean, default=False)
+    locked_at = Column(DateTime, nullable=True)
     
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
     terms: Mapped[List["Term"]] = relationship("Term", back_populates="academic_session")
+    cumulative_results: Mapped[List["StudentCumulativeResult"]] = relationship("StudentCumulativeResult", back_populates="academic_session")
 
 class Term(TenantBaseModel):
     __tablename__ = "terms"
@@ -92,12 +98,75 @@ class Term(TenantBaseModel):
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
     is_current = Column(Boolean, default=False)
+    is_locked = Column(Boolean, default=False)
+    locked_at = Column(DateTime, nullable=True)
     
     school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
     
     # Relationships
     academic_session: Mapped["AcademicSession"] = relationship("AcademicSession", back_populates="terms")
     assessments: Mapped[List["Assessment"]] = relationship("Assessment", back_populates="term")
+    subject_results: Mapped[List["SubjectResult"]] = relationship("SubjectResult", back_populates="term")
+    term_results: Mapped[List["TermResult"]] = relationship("TermResult", back_populates="term")
+
+
+class SubjectResult(TenantBaseModel):
+    __tablename__ = "subject_results"
+
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False)
+    subject_id = Column(Integer, ForeignKey("subjects.id"), nullable=False)
+    term_id = Column(Integer, ForeignKey("terms.id"), nullable=False)
+    
+    total_score = Column(Float, nullable=False)
+    grade = Column(String(10), nullable=False)
+    gpa = Column(Float, nullable=True) # Nullable if GPA is not used by the school's profile
+    rank = Column(Integer, nullable=True) # Rank within the class/subject
+    remarks = Column(Text, nullable=True)
+
+    # Relationships
+    student: Mapped["Student"] = relationship("Student", back_populates="subject_results")
+    subject: Mapped["Subject"] = relationship("Subject", back_populates="subject_results")
+    term: Mapped["Term"] = relationship("Term", back_populates="subject_results")
+
+    # Composite unique constraint to ensure one result per student per subject per term
+    __table_args__ = (sa.UniqueConstraint('student_id', 'subject_id', 'term_id', name='_student_subject_term_uc'),)
+
+
+class TermResult(TenantBaseModel):
+    __tablename__ = "term_results"
+
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False)
+    term_id = Column(Integer, ForeignKey("terms.id"), nullable=False)
+    
+    total_gpa = Column(Float, nullable=True)
+    total_score = Column(Float, nullable=True)
+    overall_grade = Column(String(10), nullable=True)
+    position_in_class = Column(Integer, nullable=True)
+    remarks = Column(Text, nullable=True)
+
+    # Relationships
+    student: Mapped["Student"] = relationship("Student", back_populates="term_results")
+    term: Mapped["Term"] = relationship("Term", back_populates="term_results")
+
+    __table_args__ = (sa.UniqueConstraint('student_id', 'term_id', name='_student_term_uc'),)
+
+
+class StudentCumulativeResult(TenantBaseModel):
+    __tablename__ = "student_cumulative_results"
+
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False)
+    academic_session_id = Column(Integer, ForeignKey("academic_sessions.id"), nullable=False)
+
+    cumulative_gpa = Column(Float, nullable=True)
+    cumulative_score = Column(Float, nullable=True)
+    overall_cumulative_grade = Column(String(10), nullable=True)
+    overall_cumulative_position = Column(Integer, nullable=True)
+
+    # Relationships
+    student: Mapped["Student"] = relationship("Student", back_populates="cumulative_results")
+    academic_session: Mapped["AcademicSession"] = relationship("AcademicSession", back_populates="cumulative_results")
+
+    __table_args__ = (sa.UniqueConstraint('student_id', 'academic_session_id', name='_student_academic_session_uc'),)
 
 
 class GradingProfile(BaseModel):
