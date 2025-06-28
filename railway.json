@@ -1,17 +1,1 @@
-{
-  "build": {
-    "nix": {
-      "packages": [
-        "cairo",
-        "pango",
-        "gdk-pixbuf",
-        "libffi",
-        "harfbuzz",
-        "glib",
-        "fontconfig",
-        "libxml2",
-        "libxslt"
-      ]
-    }
-  }
-}
+{}
