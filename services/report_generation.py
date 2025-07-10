@@ -3,7 +3,7 @@ from models.school import ReportTemplate, School
 from models.student import Student
 from models.user import User
 from models.academic import SubjectResult, TermResult, StudentCumulativeResult, Term, AcademicSession, Subject
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from jinja2 import Template
 from weasyprint import HTML
 from utils.exceptions import NotFoundException
