@@ -1,0 +1,79 @@
+# Dependencies
+venv/
+env/
+.venv/
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
+.coverage
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+
+# Documentation
+docs/_build/
+
+# Local configuration
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Database
+*.db
+*.db-journal
+
+# Testing
+.tests/
+.pytest_cache/
+
+# Coverage
+.coverage*
+htmlcov/
+.coverage
+.nyc_output
+
+# Environment specific
+.envrc
+.direnv/

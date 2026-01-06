@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Union
 from datetime import datetime, date
 import os
 import uuid
@@ -13,7 +13,8 @@ from schemas.admission import (
     AdmissionApplication as AdmissionApplicationSchema, AdmissionApplicationCreate, AdmissionApplicationUpdate,
     ApplicationDocument as ApplicationDocumentSchema, ApplicationDocumentCreate,
     ApplicationStatusUpdate, ApplicationApproval,
-    AdmissionFormTemplate as AdmissionFormTemplateSchema, AdmissionFormTemplateCreate, AdmissionFormTemplateUpdate
+    AdmissionFormTemplate as AdmissionFormTemplateSchema, AdmissionFormTemplateCreate, AdmissionFormTemplateUpdate,
+    PublicApplicationStatus
 )
 from schemas.prospective_applicant import (
     ProspectiveApplicantCreate, ProspectiveApplicantLogin, ProspectiveApplicantResponse, ProspectiveApplicantToken

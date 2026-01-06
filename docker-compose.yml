@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:16
+    container_name: edrp_db
+    environment:
+      POSTGRES_DB: edrp
+      POSTGRES_USER: edrp
+      POSTGRES_PASSWORD: edrp2025
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    networks:
+      - edrp_fresh_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U edrp -d edrp"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: edrp_app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://edrp:edrp2025@db:5432/edrp
+      - SECRET_KEY=1b5aaf1d96e1a8b1419885bff22546cbdc0dd4b4962879e91c876803bc443391
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=1440
+      - ROOT_DOMAIN=localhost
+      - ENVIRONMENT=development
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads  # For file uploads
+      - .:/app  # Mount the project directory (optional, for development)
+    restart: unless-stopped
+    networks:
+      - edrp_fresh_net
+
+volumes:
+  postgres_data:
+
+networks:
+  edrp_fresh_net:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1400
