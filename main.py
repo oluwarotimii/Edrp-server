@@ -12,9 +12,10 @@ import uvicorn
 import config
 
 from database import engine, Base
+from initialization import initialize_super_admin
 from routers import (
-    schools, users, students, teachers, academic, 
-    attendance, assessments, fees, communication, 
+    schools, users, students, teachers, academic,
+    attendance, assessments, fees, communication,
     timetable, admissions, admin, happenings, auth, super_admin, roles, subdomains, subscriptions,
     email_templates, grading_profiles, report_templates, global_settings
 )
@@ -24,6 +25,15 @@ from utils.exceptions import setup_exception_handlers
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # We are now using Alembic for migrations, so we don't need to create tables here.
+
+    # Initialize super admin user if it doesn't exist
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        initialize_super_admin(db)
+    finally:
+        db.close()
+
     yield
 
 

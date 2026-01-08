@@ -18,38 +18,39 @@ router = APIRouter()
 role_router = APIRouter()
 permission_router = APIRouter()
 
-@router.post("/login", response_model=Token)
-async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
-):
-    """User login"""
-    user = db.query(User).filter(
-        (User.username == form_data.username) | (User.email == form_data.username)
-    ).first()
-    
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise UnauthorizedException("Incorrect username or password")
-    
-    if not user.is_active:
-        raise UnauthorizedException("Account is deactivated")
-    
-    if not user.is_approved:
-        raise UnauthorizedException("Account is pending approval")
-    
-    # Update last login
-    from datetime import datetime
-    user.last_login = datetime.utcnow()
-    user.failed_login_attempts = 0
-    db.commit()
-    
-    access_token = create_access_token(data={"sub": user.username})
-    
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": user
-    }
+# Remove duplicate login endpoint - it's already in auth.py
+# @router.post("/login", response_model=Token)
+# async def login(
+#     form_data: OAuth2PasswordRequestForm = Depends(),
+#     db: Session = Depends(get_db)
+# ):
+#     """User login"""
+#     user = db.query(User).filter(
+#         (User.username == form_data.username) | (User.email == form_data.username)
+#     ).first()
+#
+#     if not user or not verify_password(form_data.password, user.hashed_password):
+#         raise UnauthorizedException("Incorrect username or password")
+#
+#     if not user.is_active:
+#         raise UnauthorizedException("Account is deactivated")
+#
+#     if not user.is_approved:
+#         raise UnauthorizedException("Account is pending approval")
+#
+#     # Update last login
+#     from datetime import datetime
+#     user.last_login = datetime.utcnow()
+#     user.failed_login_attempts = 0
+#     db.commit()
+#
+#     access_token = create_access_token(data={"sub": user.username})
+#
+#     return {
+#         "access_token": access_token,
+#         "token_type": "bearer",
+#         "user": user
+#     }
 
 @router.get("/users/pending", response_model=List[UserSchema])
 async def get_pending_users(

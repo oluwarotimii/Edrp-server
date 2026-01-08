@@ -263,12 +263,60 @@ class PermissionService:
     @staticmethod
     def create_default_roles(db: Session) -> None:
         """Create default system roles"""
-        # Create default roles with their permissions
-        default_roles = {
+        # Create default system roles with their permissions
+        system_roles = {
             "super_admin": {
                 "description": "Super administrator with all permissions",
                 "permissions": "*"  # All permissions
-            },
+            }
+        }
+
+        # Create system roles (these are global, not tied to specific schools)
+        for role_name, role_data in system_roles.items():
+            existing_role = db.query(Role).filter(
+                Role.name == role_name,
+                Role.school_id == None  # System roles have no school_id
+            ).first()
+            if not existing_role:
+                role = Role(
+                    name=role_name,
+                    description=role_data["description"],
+                    is_system_role=True,
+                    school_id=None  # System roles have no school association
+                )
+                db.add(role)
+                db.flush()
+
+                # Assign permissions
+                if role_data["permissions"] == "*":
+                    # Assign all permissions
+                    all_permissions = db.query(Permission).all()
+                    role.permissions.extend(all_permissions)
+                else:
+                    # Assign specific permissions
+                    for perm_pattern in role_data["permissions"]:
+                        if perm_pattern.endswith("*"):
+                            # Wildcard permission - assign all permissions in module
+                            module_prefix = perm_pattern[:-1]
+                            matching_perms = db.query(Permission).filter(
+                                Permission.name.like(f"{module_prefix}%")
+                            ).all()
+                            role.permissions.extend(matching_perms)
+                        else:
+                            # Specific permission
+                            permission = db.query(Permission).filter(
+                                Permission.name == perm_pattern
+                            ).first()
+                            if permission:
+                                role.permissions.append(permission)
+
+        db.commit()
+
+    @staticmethod
+    def create_school_default_roles(db: Session, school_id: int) -> None:
+        """Create default roles for a specific school"""
+        # Create default school-specific roles with their permissions
+        school_roles = {
             "school_admin": {
                 "description": "School administrator",
                 "permissions": [
@@ -316,55 +364,41 @@ class PermissionService:
                 ]
             }
         }
-        
-        for role_name, role_data in default_roles.items():
-            existing_role = db.query(Role).filter(Role.name == role_name).first()
+
+        # Create school-specific roles
+        for role_name, role_data in school_roles.items():
+            existing_role = db.query(Role).filter(
+                Role.name == role_name,
+                Role.school_id == school_id  # School-specific role
+            ).first()
             if not existing_role:
                 role = Role(
                     name=role_name,
                     description=role_data["description"],
-                    is_system_role=True,
-                    school_id=1  # System roles belong to a default school
+                    is_system_role=False,  # Not a system role
+                    school_id=school_id  # Associated with specific school
                 )
                 db.add(role)
                 db.flush()
-                
-                # Assign permissions
-                if role_data["permissions"] == "*":
-                    # Assign all permissions
-                    all_permissions = db.query(Permission).all()
-                    role.permissions.extend(all_permissions)
-                else:
-                    # Assign specific permissions
-                    for perm_pattern in role_data["permissions"]:
-                        if perm_pattern.endswith("*"):
-                            # Wildcard permission - assign all permissions in module
-                            module_prefix = perm_pattern[:-1]
-                            matching_perms = db.query(Permission).filter(
-                                Permission.name.like(f"{module_prefix}%")
-                            ).all()
-                            role.permissions.extend(matching_perms)
-                        else:
-                            # Specific permission
-                            permission = db.query(Permission).filter(
-                                Permission.name == perm_pattern
-                            ).first()
-                            if permission:
-                                role.permissions.append(permission)
-        
-        db.commit()
-from functools import wraps
 
-def require_permission(permission_name: str):
-    """Decorator to require specific permission for endpoint access"""
-    def decorator(func):
-        @wraps(func)
-        async def wrapper(*args, current_user: User = Depends(get_current_user), **kwargs):
-            # Check that the user has the required permission
-            if not current_user.has_permission(permission_name):
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                                    detail="You do not have permission to perform this action")
-            # Call the function if the user has the required permission
-            return await func(*args, current_user=current_user, **kwargs)
-        return wrapper
-    return decorator
+                # Assign permissions
+                for perm_pattern in role_data["permissions"]:
+                    if perm_pattern.endswith("*"):
+                        # Wildcard permission - assign all permissions in module
+                        module_prefix = perm_pattern[:-1]
+                        matching_perms = db.query(Permission).filter(
+                            Permission.name.like(f"{module_prefix}%")
+                        ).all()
+                        role.permissions.extend(matching_perms)
+                    else:
+                        # Specific permission
+                        permission = db.query(Permission).filter(
+                            Permission.name == perm_pattern
+                        ).first()
+                        if permission:
+                            role.permissions.append(permission)
+
+        db.commit()
+
+# The decorator implementation was incorrect - it's better to use the dependency approach
+# from utils.dependencies instead of creating a separate decorator here

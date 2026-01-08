@@ -113,3 +113,28 @@ class ProspectiveApplicant(TenantBaseModel):
 
     # Relationships
     applications: Mapped[List["AdmissionApplication"]] = relationship("AdmissionApplication", back_populates="prospective_applicant")
+
+
+# Add methods to User class to check permissions
+def has_permission(self, permission_name: str, db_session):
+    """Check if user has a specific permission"""
+    from services.permissions import PermissionService
+    return PermissionService.has_permission(self, permission_name, db_session)
+
+
+def has_any_permission(self, permission_names: List[str], db_session):
+    """Check if user has any of the specified permissions"""
+    from services.permissions import PermissionService
+    return PermissionService.has_any_permission(self, permission_names, db_session)
+
+
+def has_all_permissions(self, permission_names: List[str], db_session):
+    """Check if user has all of the specified permissions"""
+    from services.permissions import PermissionService
+    return PermissionService.has_all_permissions(self, permission_names, db_session)
+
+
+# Add these methods to the User class
+User.has_permission = has_permission
+User.has_any_permission = has_any_permission
+User.has_all_permissions = has_all_permissions

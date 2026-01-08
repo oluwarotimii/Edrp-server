@@ -104,109 +104,110 @@ async def get_current_school(
 
 def require_permission(permission_name: str):
     """Dependency factory to require specific permission"""
-    
+
     def permission_checker(
         current_user: User = Depends(get_current_user),
         db: Session = Depends(get_db)
     ) -> User:
         """Check if current user has required permission"""
-        
+
         if not isinstance(current_user, User):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Only authenticated users can perform this action."
             )
 
-        # Get user permissions
-        user_permissions = set()
-        for role in current_user.roles:
-            for permission in role.permissions:
-                user_permissions.add(permission.name)
-        
+        # Use the PermissionService to check permissions
+        from services.permissions import PermissionService
+        has_perm = PermissionService.has_permission(current_user, permission_name, db)
+
         # Check if user has the required permission
-        if permission_name not in user_permissions:
+        if not has_perm:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Insufficient permissions. Required: {permission_name}"
             )
-        
+
         return current_user
-    
+
     return permission_checker
 
 def require_any_permission(permission_names: list):
     """Dependency factory to require any of the specified permissions"""
-    
+
     def permission_checker(
         current_user: User = Depends(get_current_user),
         db: Session = Depends(get_db)
     ) -> User:
         """Check if current user has any of the required permissions"""
-        
+
         if not isinstance(current_user, User):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Only authenticated users can perform this action."
             )
 
-        # Get user permissions
-        user_permissions = set()
-        for role in current_user.roles:
-            for permission in role.permissions:
-                user_permissions.add(permission.name)
-        
+        # Use the PermissionService to check permissions
+        from services.permissions import PermissionService
+        has_any = PermissionService.has_any_permission(current_user, permission_names, db)
+
         # Check if user has any of the required permissions
-        if not any(perm in user_permissions for perm in permission_names):
+        if not has_any:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Insufficient permissions. Required any of: {', '.join(permission_names)}"
             )
-        
+
         return current_user
-    
+
     return permission_checker
 
 def require_all_permissions(permission_names: list):
     """Dependency factory to require all of the specified permissions"""
-    
+
     def permission_checker(
         current_user: User = Depends(get_current_user),
         db: Session = Depends(get_db)
     ) -> User:
         """Check if current user has all of the required permissions"""
-        
+
         if not isinstance(current_user, User):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Only authenticated users can perform this action."
             )
 
-        # Get user permissions
-        user_permissions = set()
-        for role in current_user.roles:
-            for permission in role.permissions:
-                user_permissions.add(permission.name)
-        
+        # Use the PermissionService to check permissions
+        from services.permissions import PermissionService
+        has_all = PermissionService.has_all_permissions(current_user, permission_names, db)
+
         # Check if user has all of the required permissions
-        missing_permissions = [perm for perm in permission_names if perm not in user_permissions]
-        if missing_permissions:
+        if not has_all:
+            # Find which permissions are missing
+            user_permissions = set()
+            for role in current_user.roles:
+                for permission in role.permissions:
+                    user_permissions.add(permission.name)
+
+            missing_permissions = [perm for perm in permission_names if perm not in user_permissions]
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Insufficient permissions. Missing: {', '.join(missing_permissions)}"
             )
-        
+
         return current_user
-    
+
     return permission_checker
 
 def require_role(role_name: str):
     """Dependency factory to require specific role"""
-    
+
     def role_checker(
-        current_user: User = Depends(get_current_user)
+        current_user: User = Depends(get_current_user),
+        db: Session = Depends(get_db)
     ) -> User:
         """Check if current user has required role"""
-        
+
         if not isinstance(current_user, User):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -214,25 +215,33 @@ def require_role(role_name: str):
             )
 
         user_roles = [role.name for role in current_user.roles]
-        
+
+        # Handle both naming conventions for super_admin role
+        if role_name == "super_admin" and "super_admin" in user_roles:
+            return current_user
+        elif role_name == "super_admin" and "Super Admin" in user_roles:
+            # Also accept "Super Admin" as equivalent to "super_admin"
+            return current_user
+
         if role_name not in user_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Access denied. Required role: {role_name}"
             )
-        
+
         return current_user
-    
+
     return role_checker
 
 def require_any_role(role_names: list):
     """Dependency factory to require any of the specified roles"""
-    
+
     def role_checker(
-        current_user: User = Depends(get_current_user)
+        current_user: User = Depends(get_current_user),
+        db: Session = Depends(get_db)
     ) -> User:
         """Check if current user has any of the required roles"""
-        
+
         if not isinstance(current_user, User):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -240,15 +249,29 @@ def require_any_role(role_names: list):
             )
 
         user_roles = [role.name for role in current_user.roles]
-        
-        if not any(role in user_roles for role in role_names):
+
+        # Check if any of the required roles match (with fallback for naming inconsistencies)
+        has_required_role = False
+        for required_role in role_names:
+            if required_role in user_roles:
+                has_required_role = True
+                break
+            # Handle super_admin naming inconsistency
+            elif required_role == "super_admin" and "Super Admin" in user_roles:
+                has_required_role = True
+                break
+            elif required_role == "Super Admin" and "super_admin" in user_roles:
+                has_required_role = True
+                break
+
+        if not has_required_role:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Access denied. Required any role: {', '.join(role_names)}"
             )
-        
+
         return current_user
-    
+
     return role_checker
 
 async def get_optional_current_user(

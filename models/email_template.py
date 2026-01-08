@@ -62,9 +62,9 @@ class EmailTemplate(Base):
 
 class SentEmail(Base):
     __tablename__ = "sent_emails"
-    
+
     id = Column(String(50), primary_key=True, index=True)
-    template_id = Column(String(50), index=True)
+    template_id = Column(String(50), ForeignKey("email_templates.id"), index=True)
     recipient_email = Column(String(255), nullable=False)
     subject = Column(String(255), nullable=False)
     body = Column(Text, nullable=False)
@@ -77,7 +77,7 @@ class SentEmail(Base):
     clicked_at = Column(DateTime(timezone=True), nullable=True) # New: Timestamp for link click
     error_message = Column(Text, nullable=True)
     metadata_ = Column("metadata", JSONB, default=dict)  # Additional metadata
-    
+
     # Relationships
     template = relationship("EmailTemplate", back_populates="sent_emails")
 
