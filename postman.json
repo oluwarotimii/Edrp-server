@@ -1,9 +1,9 @@
 {
   "info": {
-    "_postman_id": "edrp-structured-system",
-    "name": "EDRP Structured System - Authentication & RBAC First",
+    "_postman_id": "edrp-complete-organized",
+    "name": "EDRP Complete Organized System",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Education ERP Platform - Organized by authentication, RBAC, then school modules"
+    "description": "Complete Education ERP Platform - Organized by functionality"
   },
   "item": [
     {
@@ -50,7 +50,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"username\": \"newuser\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"password\": \"SecurePass123!\",\n  \"join_code\": \"ABC123\",\n  \"role_name\": \"student\"\n}"
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"username\": \"newuser\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"password\": \"SecurePass123!\",\n  \"join_code\": \"JOINCODE\",\n  \"role_name\": \"student\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/register-and-join",
@@ -84,25 +84,6 @@
           },
           "response": []
         },
-        {
-          "name": "Auth - Get User Permissions",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/permissions",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "permissions"]
-            },
-            "description": "Get current user's permissions"
-          },
-          "response": []
-        }
         {
           "name": "Auth - Get Current User Profile",
           "request": {
@@ -186,517 +167,14 @@
             "description": "Refresh access token"
           },
           "response": []
-        },
-        {
-          "name": "Auth - Forgot Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/x-www-form-urlencoded"
-              }
-            ],
-            "body": {
-              "mode": "urlencoded",
-              "urlencoded": [
-                {
-                  "key": "email",
-                  "value": "user@example.com",
-                  "type": "text"
-                }
-              ]
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/forgot-password",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "forgot-password"]
-            },
-            "description": "Initiate password reset process"
-          },
-          "response": []
-        },
-        {
-          "name": "Auth - Reset Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"token\": \"reset_token_from_email\",\n  \"new_password\": \"NewSecurePassword123!\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/reset-password",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "reset-password"]
-            },
-            "description": "Reset password using reset token"
-          },
-          "response": []
         }
       ]
     },
     {
-      "name": "02 - RBAC - System Management (Super Admin Only)",
+      "name": "02 - Super Admin Management",
       "item": [
         {
-          "name": "RBAC - Get All Roles",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/system/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "system", "roles"]
-            },
-            "description": "Get all system roles (Super Admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "RBAC - Create New Role",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"custom_admin\",\n  \"description\": \"Custom administrative role\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/system/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "system", "roles"]
-            },
-            "description": "Create a new system role (Super Admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "RBAC - Get Role by ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/system/roles/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "system", "roles", "1"]
-            },
-            "description": "Get specific role details (Super Admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "RBAC - Update Role",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"updated_role_name\",\n  \"description\": \"Updated role description\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/system/roles/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "system", "roles", "1"]
-            },
-            "description": "Update role details (Super Admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "RBAC - Get All Permissions",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/system/permissions",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "system", "permissions"]
-            },
-            "description": "Get all available permissions (Super Admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "RBAC - Create New Permission",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"custom_module:action\",\n  \"description\": \"Description of the custom permission\",\n  \"module\": \"custom_module\",\n  \"action\": \"action\",\n  \"resource\": \"resource\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/system/permissions",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "system", "permissions"]
-            },
-            "description": "Create a new permission (Super Admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "RBAC - Assign Permission to Role",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/system/roles/1/permissions/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "system", "roles", "1", "permissions", "1"]
-            },
-            "description": "Assign a permission to a role (Super Admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "RBAC - Remove Permission from Role",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/system/roles/1/permissions/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "system", "roles", "1", "permissions", "1"]
-            },
-            "description": "Remove a permission from a role (Super Admin only)"
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "03 - RBAC - School Management (School Admin)",
-      "item": [
-        {
-          "name": "RBAC - Get School Roles",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/school/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "school", "roles"]
-            },
-            "description": "Get roles for current school (School Admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "RBAC - Create School Role",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"custom_staff\",\n  \"description\": \"Custom staff role for this school\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/school/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "school", "roles"]
-            },
-            "description": "Create a new role for the current school (School Admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "RBAC - Get School Role by ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/school/roles/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "school", "roles", "1"]
-            },
-            "description": "Get specific school role details (School Admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "RBAC - Update School Role",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"updated_staff_role\",\n  \"description\": \"Updated staff role description\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/school/roles/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "school", "roles", "1"]
-            },
-            "description": "Update school role details (School Admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "RBAC - Assign Permission to School Role",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/school/roles/1/permissions/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "school", "roles", "1", "permissions", "1"]
-            },
-            "description": "Assign a permission to a school role (School Admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "RBAC - Remove Permission from School Role",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/school/roles/1/permissions/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "school", "roles", "1", "permissions", "1"]
-            },
-            "description": "Remove a permission from a school role (School Admin only)"
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "04 - User Management",
-      "item": [
-        {
-          "name": "User - Get All Users",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/users",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "users"]
-            },
-            "description": "Get all users in the current school (requires users:view permission)"
-          },
-          "response": []
-        },
-        {
-          "name": "User - Get User by ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/users/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "users", "1"]
-            },
-            "description": "Get specific user details"
-          },
-          "response": []
-        },
-        {
-          "name": "User - Update User",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"first_name\": \"Updated\",\n  \"last_name\": \"Name\",\n  \"phone\": \"+1234567890\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/users/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "users", "1"]
-            },
-            "description": "Update user profile (requires users:update permission or own profile)"
-          },
-          "response": []
-        },
-        {
-          "name": "User - Delete/Deactivate User",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/users/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "users", "1"]
-            },
-            "description": "Deactivate user (requires users:delete permission)"
-          },
-          "response": []
-        },
-        {
-          "name": "User - Get Pending Users",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/users/pending",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "users", "pending"]
-            },
-            "description": "Get users pending approval (requires users:approve permission)"
-          },
-          "response": []
-        },
-        {
-          "name": "User - Approve or Reject User",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"is_approved\": true,\n  \"rejection_reason\": null\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/users/1/approve",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "users", "1", "approve"]
-            },
-            "description": "Approve or reject a user (requires users:approve permission)"
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "05 - School Management",
-      "item": [
-        {
-          "name": "School - Get All Schools",
+          "name": "Super Admin - Get All Schools",
           "request": {
             "method": "GET",
             "header": [
@@ -715,34 +193,7 @@
           "response": []
         },
         {
-          "name": "School - Create New School",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"New School\",\n  \"subdomain\": \"newschool\",\n  \"address\": \"123 School St, City\",\n  \"phone\": \"+1234567890\",\n  \"email\": \"contact@newschool.edu\",\n  \"website\": \"https://newschool.edu\",\n  \"principal_name\": \"John Smith\",\n  \"school_type\": \"Primary\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/schools",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "schools"]
-            },
-            "description": "Create a new school (Super Admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "School - Get School by ID",
+          "name": "Super Admin - Get School by ID",
           "request": {
             "method": "GET",
             "header": [
@@ -756,12 +207,12 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "schools", "1"]
             },
-            "description": "Get specific school details"
+            "description": "Get specific school details (Super Admin only)"
           },
           "response": []
         },
         {
-          "name": "School - Update School",
+          "name": "Super Admin - Approve School",
           "request": {
             "method": "PUT",
             "header": [
@@ -776,14 +227,65 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated School Name\",\n  \"address\": \"456 Updated St, City\"\n}"
+              "raw": "{\n  \"is_approved\": true,\n  \"approval_notes\": \"School approved for operation\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/schools/1/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "schools", "1", "approve"]
+            },
+            "description": "Approve a school for operation (Super Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Super Admin - Update School",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated School Name\",\n  \"address\": \"456 Updated St, City\",\n  \"is_approved\": true\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/schools/1",
               "host": ["{{baseUrl}}"],
               "path": ["api", "schools", "1"]
             },
-            "description": "Update school details (School Admin or Super Admin)"
+            "description": "Update school details (Super Admin only)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 - School Management",
+      "item": [
+        {
+          "name": "School - Get School Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/schools/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "schools", "1"]
+            },
+            "description": "Get specific school details including join code"
           },
           "response": []
         },
@@ -805,33 +307,14 @@
             "description": "Get all users in a specific school"
           },
           "response": []
-        },
-        {
-          "name": "School - Get School Details (with Join Code)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/schools/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "schools", "1"]
-            },
-            "description": "Get specific school details including join code (School Admin or Super Admin only)"
-          },
-          "response": []
         }
       ]
     },
     {
-      "name": "06 - Admissions Management",
+      "name": "04 - Class Management",
       "item": [
         {
-          "name": "Admissions - Get All Applications",
+          "name": "Class - Get All Classes",
           "request": {
             "method": "GET",
             "header": [
@@ -841,16 +324,16 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admissions",
+              "raw": "{{baseUrl}}/api/classes",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "admissions"]
+              "path": ["api", "classes"]
             },
-            "description": "Get all admission applications"
+            "description": "Get all classes in the current school"
           },
           "response": []
         },
         {
-          "name": "Admissions - Create New Application",
+          "name": "Class - Create New Class",
           "request": {
             "method": "POST",
             "header": [
@@ -865,19 +348,19 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"student_name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"+1234567890\",\n  \"class_id\": 1,\n  \"application_date\": \"2023-10-15\"\n}"
+              "raw": "{\n  \"name\": \"Grade 1-A\",\n  \"level\": \"Primary\",\n  \"capacity\": 25,\n  \"room_number\": \"Room 101\",\n  \"grade_level\": 1,\n  \"class_teacher_id\": 1\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/admissions",
+              "raw": "{{baseUrl}}/api/classes",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "admissions"]
+              "path": ["api", "classes"]
             },
-            "description": "Create a new admission application"
+            "description": "Create a new class"
           },
           "response": []
         },
         {
-          "name": "Admissions - Get Application by ID",
+          "name": "Class - Get Class by ID",
           "request": {
             "method": "GET",
             "header": [
@@ -887,16 +370,16 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admissions/1",
+              "raw": "{{baseUrl}}/api/classes/1",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "admissions", "1"]
+              "path": ["api", "classes", "1"]
             },
-            "description": "Get specific admission application details"
+            "description": "Get specific class details"
           },
           "response": []
         },
         {
-          "name": "Admissions - Update Application",
+          "name": "Class - Update Class",
           "request": {
             "method": "PUT",
             "header": [
@@ -911,19 +394,19 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"approved\",\n  \"admission_date\": \"2023-11-01\"\n}"
+              "raw": "{\n  \"name\": \"Grade 1-B\",\n  \"room_number\": \"Room 102\",\n  \"grade_level\": 1,\n  \"class_teacher_id\": 2,\n  \"capacity\": 30\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/admissions/1",
+              "raw": "{{baseUrl}}/api/classes/1",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "admissions", "1"]
+              "path": ["api", "classes", "1"]
             },
-            "description": "Update admission application status"
+            "description": "Update class details"
           },
           "response": []
         },
         {
-          "name": "Admissions - Delete Application",
+          "name": "Class - Delete Class",
           "request": {
             "method": "DELETE",
             "header": [
@@ -933,18 +416,18 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admissions/1",
+              "raw": "{{baseUrl}}/api/classes/1",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "admissions", "1"]
+              "path": ["api", "classes", "1"]
             },
-            "description": "Delete admission application"
+            "description": "Delete class"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "07 - Student Management",
+      "name": "05 - Student Management",
       "item": [
         {
           "name": "Student - Get All Students",
@@ -961,7 +444,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "students"]
             },
-            "description": "Get all students in the current school (requires students:view permission)"
+            "description": "Get all students in the current school"
           },
           "response": []
         },
@@ -981,14 +464,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"date_of_birth\": \"2010-05-15\",\n  \"gender\": \"Male\",\n  \"class_id\": 1,\n  \"parent_id\": 1\n}"
+              "raw": "{\n  \"student_id\": \"STD001\",\n  \"user_id\": 1,\n  \"class_id\": 1,\n  \"admission_number\": \"ADM001\",\n  \"admission_date\": \"2026-01-08\",\n  \"boarding_status\": \"Day\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/students",
               "host": ["{{baseUrl}}"],
               "path": ["api", "students"]
             },
-            "description": "Create a new student (requires students:create permission)"
+            "description": "Create a new student"
           },
           "response": []
         },
@@ -1027,40 +510,48 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"first_name\": \"Updated\",\n  \"last_name\": \"Name\",\n  \"phone\": \"+1234567890\"\n}"
+              "raw": "{\n  \"admission_number\": \"ADM002\",\n  \"boarding_status\": \"Boarding\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/students/1",
               "host": ["{{baseUrl}}"],
               "path": ["api", "students", "1"]
             },
-            "description": "Update student details (requires students:update permission)"
+            "description": "Update student details"
           },
           "response": []
         },
         {
-          "name": "Student - Delete Student",
+          "name": "Student - Update Student Status",
           "request": {
-            "method": "DELETE",
+            "method": "PUT",
             "header": [
               {
                 "key": "Authorization",
                 "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
-            "url": {
-              "raw": "{{baseUrl}}/api/students/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "students", "1"]
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\",\n  \"effective_date\": \"2026-01-08\",\n  \"notes\": \"Student status updated\"\n}"
             },
-            "description": "Delete student (requires students:delete permission)"
+            "url": {
+              "raw": "{{baseUrl}}/api/students/1/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "students", "1", "status"]
+            },
+            "description": "Update student status"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "08 - Teacher Management",
+      "name": "06 - Teacher Management",
       "item": [
         {
           "name": "Teacher - Get All Teachers",
@@ -1077,7 +568,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "teachers"]
             },
-            "description": "Get all teachers in the current school (requires teachers:view permission)"
+            "description": "Get all teachers in the current school"
           },
           "response": []
         },
@@ -1097,14 +588,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"first_name\": \"Jane\",\n  \"last_name\": \"Smith\",\n  \"email\": \"jane.smith@example.com\",\n  \"phone\": \"+1234567890\",\n  \"subject_specializations\": [\"Mathematics\", \"Physics\"]\n}"
+              "raw": "{\n  \"employee_id\": \"EMP001\",\n  \"user_id\": 1,\n  \"department_id\": 1,\n  \"hire_date\": \"2026-01-08\",\n  \"teaching_qualification\": \"B.Ed\",\n  \"specialization\": \"Mathematics\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/teachers",
               "host": ["{{baseUrl}}"],
               "path": ["api", "teachers"]
             },
-            "description": "Create a new teacher (requires teachers:create permission)"
+            "description": "Create a new teacher"
           },
           "response": []
         },
@@ -1143,87 +634,22 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"first_name\": \"Updated\",\n  \"last_name\": \"Name\",\n  \"phone\": \"+1234567890\"\n}"
+              "raw": "{\n  \"specialization\": \"Mathematics and Physics\",\n  \"contract_type\": \"permanent\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/teachers/1",
               "host": ["{{baseUrl}}"],
               "path": ["api", "teachers", "1"]
             },
-            "description": "Update teacher details (requires teachers:update permission)"
-          },
-          "response": []
-        },
-        {
-          "name": "Teacher - Delete Teacher",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/teachers/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "teachers", "1"]
-            },
-            "description": "Delete teacher (requires teachers:delete permission)"
+            "description": "Update teacher details"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "09 - Academic Management",
+      "name": "07 - Academic Management",
       "item": [
-        {
-          "name": "Academic - Get All Classes",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/classes",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "classes"]
-            },
-            "description": "Get all classes in the current school"
-          },
-          "response": []
-        },
-        {
-          "name": "Academic - Create New Class",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Grade 5A\",\n  \"level\": \"Primary\",\n  \"capacity\": 30,\n  \"teacher_id\": 1\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/classes",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "classes"]
-            },
-            "description": "Create a new class"
-          },
-          "response": []
-        },
         {
           "name": "Academic - Get All Subjects",
           "request": {
@@ -1240,7 +666,7 @@
               "path": ["api", "subjects"]
             },
             "description": "Get all subjects in the current school"
-          },••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
+          },
           "response": []
         },
         {
@@ -1267,6 +693,488 @@
               "path": ["api", "subjects"]
             },
             "description": "Create a new subject"
+          },
+          "response": []
+        },
+        {
+          "name": "Academic - Get All Departments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/departments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "departments"]
+            },
+            "description": "Get all departments in the current school"
+          },
+          "response": []
+        },
+        {
+          "name": "Academic - Create New Department",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mathematics Department\",\n  \"description\": \"Department for Mathematics education\",\n  \"head_teacher_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/departments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "departments"]
+            },
+            "description": "Create a new department"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "08 - Attendance Management",
+      "item": [
+        {
+          "name": "Attendance - Get Student Attendance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/attendance/student/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attendance", "student", "1"]
+            },
+            "description": "Get attendance records for a specific student"
+          },
+          "response": []
+        },
+        {
+          "name": "Attendance - Take Class Attendance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"class_id\": 1,\n  \"date\": \"2026-01-08\",\n  \"attendance_records\": [\n    {\n      \"student_id\": 1,\n      \"status\": \"present\"\n    },\n    {\n      \"student_id\": 2,\n      \"status\": \"absent\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/attendance/class",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attendance", "class"]
+            },
+            "description": "Take attendance for a class"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "09 - Assessment Management",
+      "item": [
+        {
+          "name": "Assessment - Get All Assessments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/assessments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "assessments"]
+            },
+            "description": "Get all assessments in the current school"
+          },
+          "response": []
+        },
+        {
+          "name": "Assessment - Create New Assessment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Midterm Exam\",\n  \"subject_id\": 1,\n  \"class_id\": 1,\n  \"date\": \"2026-01-15\",\n  \"max_score\": 100,\n  \"description\": \"Midterm examination\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/assessments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "assessments"]
+            },
+            "description": "Create a new assessment"
+          },
+          "response": []
+        },
+        {
+          "name": "Assessment - Get Assessment Scores",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/assessments/1/scores",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "assessments", "1", "scores"]
+            },
+            "description": "Get scores for a specific assessment"
+          },
+          "response": []
+        },
+        {
+          "name": "Assessment - Submit Assessment Score",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"student_id\": 1,\n  \"score\": 85,\n  \"grade\": \"B\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/assessments/1/scores",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "assessments", "1", "scores"]
+            },
+            "description": "Submit a score for an assessment"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "10 - Fee Management",
+      "item": [
+        {
+          "name": "Fee - Get All Fee Types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fees/types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fees", "types"]
+            },
+            "description": "Get all fee types in the current school"
+          },
+          "response": []
+        },
+        {
+          "name": "Fee - Create New Fee Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tuition Fee\",\n  \"description\": \"Monthly tuition fee\",\n  \"amount\": 500.00,\n  \"frequency\": \"monthly\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fees/types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fees", "types"]
+            },
+            "description": "Create a new fee type"
+          },
+          "response": []
+        },
+        {
+          "name": "Fee - Get Student Fees",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fees/student/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fees", "student", "1"]
+            },
+            "description": "Get fee records for a specific student"
+          },
+          "response": []
+        },
+        {
+          "name": "Fee - Record Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"student_id\": 1,\n  \"fee_type_id\": 1,\n  \"amount\": 500.00,\n  \"payment_method\": \"bank_transfer\",\n  \"reference_number\": \"REF123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fees/payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fees", "payments"]
+            },
+            "description": "Record a payment for a student"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "11 - Communication",
+      "item": [
+        {
+          "name": "Communication - Get All Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "messages"]
+            },
+            "description": "Get all messages for the current user"
+          },
+          "response": []
+        },
+        {
+          "name": "Communication - Send New Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipient_id\": 2,\n  \"subject\": \"Important Update\",\n  \"content\": \"This is an important message regarding the upcoming event.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "messages"]
+            },
+            "description": "Send a new message to another user"
+          },
+          "response": []
+        },
+        {
+          "name": "Communication - Get Happenings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/happenings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "happenings"]
+            },
+            "description": "Get all school happenings/announcements"
+          },
+          "response": []
+        },
+        {
+          "name": "Communication - Create New Happening",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"School Event\",\n  \"content\": \"Join us for the annual school event.\",\n  \"category\": \"event\",\n  \"is_published\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/happenings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "happenings"]
+            },
+            "description": "Create a new happening/announcement"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "12 - Timetable Management",
+      "item": [
+        {
+          "name": "Timetable - Get Class Timetable",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/timetable/class/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "timetable", "class", "1"]
+            },
+            "description": "Get timetable for a specific class"
+          },
+          "response": []
+        },
+        {
+          "name": "Timetable - Get Teacher Timetable",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/timetable/teacher/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "timetable", "teacher", "1"]
+            },
+            "description": "Get timetable for a specific teacher"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "13 - Admissions",
+      "item": [
+        {
+          "name": "Admissions - Get All Applications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admissions"]
+            },
+            "description": "Get all admission applications"
+          },
+          "response": []
+        },
+        {
+          "name": "Admissions - Create New Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"student_name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"+1234567890\",\n  \"class_id\": 1,\n  \"application_date\": \"2026-01-08\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admissions"]
+            },
+            "description": "Create a new admission application"
           },
           "response": []
         }
