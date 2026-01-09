@@ -29,6 +29,17 @@ class Settings:
     # Redis
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379")
 
+    # Celery
+    CELERY_BROKER_URL: str = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+    CELERY_RESULT_BACKEND: str = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
+
+    # Resend
+    RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
+
+    # Sentry
+    SENTRY_DSN: str = os.getenv("SENTRY_DSN", "")
+    SENTRY_ENVIRONMENT: str = os.getenv("SENTRY_ENVIRONMENT", "development")
+
     # File uploads
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10MB
     UPLOAD_DIR: str = "uploads"

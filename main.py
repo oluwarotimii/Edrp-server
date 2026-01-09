@@ -19,11 +19,20 @@ from routers import (
     timetable, admissions, admin, happenings, auth, super_admin, roles, subdomains, subscriptions,
     email_templates, grading_profiles, report_templates, global_settings
 )
+from routers.websocket import router as websocket_router
 from utils.exceptions import setup_exception_handlers
+from utils.redis_client import redis_client
+from utils.sentry_setup import init_sentry
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Initialize Sentry for error tracking and performance monitoring
+    init_sentry()
+
+    # Connect to Redis
+    await redis_client.connect()
+
     # We are now using Alembic for migrations, so we don't need to create tables here.
 
     # Initialize super admin user if it doesn't exist
@@ -35,6 +44,9 @@ async def lifespan(app: FastAPI):
         db.close()
 
     yield
+
+    # Cleanup on shutdown
+    await redis_client.disconnect()
 
 
 app = FastAPI(
@@ -102,6 +114,9 @@ app.include_router(happenings.router, prefix="/api", tags=["Happenings"])
 # Include subdomain router and middleware
 app.include_router(subdomains.router)
 subdomains.register_subdomain_routes(app)
+
+# Include WebSocket router
+app.include_router(websocket_router, prefix="/api", tags=["WebSocket"])
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
